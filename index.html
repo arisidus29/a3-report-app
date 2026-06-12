@@ -665,10 +665,23 @@
     }
     
     // ==================== GITHUB SYNC (Tanpa Token untuk Read, dengan Token untuk Write) ====================
+       // ==================== GITHUB SYNC (Tanpa Token untuk Read, dengan Token untuk Write) ====================
     async function pullFromGithub() {
         try {
             document.getElementById('dbStatus').innerHTML = '⏳ Mengambil data...';
             const response = await fetch(RAW_URL);
+            
+            if(response.status === 404) {
+                // File belum ada, buat database kosong
+                document.getElementById('dbStatus').innerHTML = '📝 Cloud kosong, siap sync pertama';
+                document.getElementById('dbStatus').className = 'status-offline';
+                localDatabase = [];
+                localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
+                loadLocalDatabase();
+                alert('ℹ️ Database cloud masih kosong. Silakan klik "Sync ke Cloud (Push)" untuk membuat database pertama.');
+                return;
+            }
+            
             if(!response.ok) throw new Error(`HTTP ${response.status}`);
             const cloudData = await response.json();
             if(cloudData.database && Array.isArray(cloudData.database)) {
