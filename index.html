@@ -25,7 +25,7 @@
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 0.8rem; text-align: left; }
         th { background: #e0f2fe; }
-        .fishbone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #fefce8; padding: 15px; border-radius: 16px; }
+        .fishbone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #fefce8; padding: 15px; border-radius: 16px; margin-top: 10px; }
         .fish-cat { background: #fff7ed; padding: 10px; border-radius: 12px; }
         .fish-cat textarea { width: 100%; padding: 6px; border-radius: 8px; }
         .debug-box { background: #1e1e2e; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; margin-top: 15px; max-height: 150px; overflow-y: auto; }
@@ -46,7 +46,7 @@
 <div class="container">
     <div class="header">
         <h1>📋 A3 Report - Problem Solving 8 Langkah</h1>
-        <p>Shared Database Multi-Device | Data tersimpan di GitHub</p>
+        <p>Multi-Device Database | Data di GitHub</p>
     </div>
     
     <div class="status-bar">
@@ -93,7 +93,7 @@
         
         <div class="form-grid" style="margin-top:15px">
             <div class="input-group"><label>✅ 6. CHECK / VERIFICATION</label><textarea id="check">Setelah 2 minggu, defect turun dari 6.5% menjadi 3.2%</textarea></div>
-            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">- Audit harian oleh supervisor\n- Jadwal ganti elektroda rutin\n- Review bulanan</textarea></div>
+            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">- Audit harian oleh supervisor\n- Jadwal ganti elektroda rutin</textarea></div>
         </div>
         
         <div class="form-title">📸 DOKUMENTASI PENDUKUNG</div>
@@ -119,11 +119,11 @@
 
 <script>
     // ==================== KONFIGURASI ====================
-    // Token sudah diisi dengan token baru Anda
+    // TOKEN SUDAH DIISI DENGAN TOKEN ANDA
     const GITHUB_USERNAME = "arisidus29";
     const GITHUB_REPO = "a3-report-app";
     const DATA_FILE = "a3_database.json";
-    const GITHUB_TOKEN = "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";  // Token baru sudah diisi!
+    const GITHUB_TOKEN = "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";
     
     const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${DATA_FILE}`;
     const API_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE}`;
@@ -145,7 +145,7 @@
         const container = document.getElementById('whyContainer');
         const q = ["Mengapa defect welding meningkat?","Mengapa arus las tidak stabil?","Mengapa kalibrasi overdue?","Mengapa tidak ada jadwal?","Mengapa SOP tidak ada?"];
         const a = ["Arus las tidak stabil","Kalibrasi overdue 3 bulan","Tidak ada jadwal rutin","Tidak ada SOP","Tim engineering belum buat"];
-        let html = '</table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban / Akar Masalah</th></tr></thead><tbody>';
+        let html = '<table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban / Akar Masalah</th></tr></thead><tbody>';
         for(let i=1;i<=5;i++) html += `<tr><td width="10%">${i}</td><td width="45%"><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td width="45%"><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
         html += '</tbody></table>';
         container.innerHTML = html;
@@ -163,7 +163,7 @@
     
     function initCounter() {
         const container = document.getElementById('counterContainer');
-        container.innerHTML = '<table><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></thead><tbody id="counterBody"></tbody><tr>';
+        container.innerHTML = '<table><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></thead><tbody id="counterBody"></tbody></table>';
         addRow("Kalibrasi ulang mesin las", "30 April 2026", "Tim Maintenance");
         addRow("Ganti elektroda setiap 400 siklus", "25 April 2026", "Shift Leader");
         addRow("Training standar work untuk operator baru", "15 Mei 2026", "Training Dept");
@@ -277,8 +277,8 @@
         Object.keys(d.fishbone).forEach(c => fishHtml += `<div style="flex:1;background:#fff7ed;padding:8px;border-radius:8px;"><strong>${c}:</strong><br>${escapeHtml(d.fishbone[c])}</div>`);
         fishHtml += '</div>';
         
-        let cmHtml = '<table><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th></thead><tbody>';
-        d.countermeasures.forEach((c,i) => cmHtml += `<tr><td>${i+1}</td><td>${escapeHtml(c.cm)}</td><td>${escapeHtml(c.target)}</td><td>${escapeHtml(c.pic)}</td></tr>`);
+        let cmHtml = '<tr><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th></thead><tbody>';
+        d.countermeasures.forEach((c,i) => cmHtml += `<td><td style="text-align:center">${i+1}</td><td>${escapeHtml(c.cm)}</td><td>${escapeHtml(c.target)}</td><td>${escapeHtml(c.pic)}</td></tr>`);
         cmHtml += '</tbody></table>';
         
         let imgHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + d.images.map(img => `<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">`).join('') + '</div>';
@@ -395,7 +395,7 @@
     
     function init() {
         log('🚀 Aplikasi A3 Report dimulai...');
-        log(`Token terisi: ${GITHUB_TOKEN.substring(0,15)}...`);
+        log(`Token terisi: ${GITHUB_TOKEN ? '✅ Token ada (panjang: ' + GITHUB_TOKEN.length + ')' : '❌ Token kosong!'}`);
         initWhy();
         initFishbone();
         initCounter();
