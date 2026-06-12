@@ -3,8 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A3 Report - Multi Device Database</title>
-    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <title>A3 Report - Fix Sync</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #e2e8f0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
@@ -12,7 +11,6 @@
         .header { background: linear-gradient(135deg, #1e3a5f, #0f2c3f); color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
         .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; }
         button { background: #2c7da0; border: none; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; }
-        button:hover { background: #1f5e7a; }
         .btn-green { background: #2e7d32; }
         .btn-orange { background: #e65100; }
         .btn-blue { background: #1565c0; }
@@ -22,29 +20,22 @@
         .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-weight: bold; font-size: 0.75rem; margin-bottom: 5px; }
-        .input-group input, .input-group textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 12px; font-family: inherit; }
+        .input-group input, .input-group textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 12px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 0.8rem; text-align: left; }
         th { background: #e0f2fe; }
         .fishbone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #fefce8; padding: 15px; border-radius: 16px; }
         .fish-cat { background: #fff7ed; padding: 10px; border-radius: 12px; }
-        .fish-cat strong { display: block; }
         .fish-cat textarea { width: 100%; padding: 6px; border-radius: 8px; }
-        .image-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
-        .image-card { position: relative; width: 100px; height: 100px; border-radius: 12px; overflow: hidden; border: 2px solid #cbd5e1; }
-        .image-card img { width: 100%; height: 100%; object-fit: cover; }
-        .image-card .delete-img { position: absolute; top: 2px; right: 2px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
-        .add-img { width: 100px; height: 100px; border: 2px dashed #9ca3af; border-radius: 12px; display: flex; align-items: center; justify-content: center; cursor: pointer; background: #f9fafb; font-size: 30px; }
-        .status-bar { background: #e0f2fe; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .status-online { color: #2e7d32; font-weight: bold; }
-        .status-offline { color: #c62828; font-weight: bold; }
+        .status-bar { background: #e0f2fe; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; }
+        .debug-box { background: #1e1e2e; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; margin-top: 10px; max-height: 150px; overflow-y: auto; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 24px; border-radius: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; }
-        @media print { .toolbar, .form-panel, .status-bar, .no-print { display: none !important; } }
-        .a3-report { background: white; padding: 20px; }
-        .a3-header { text-align: center; border-bottom: 3px solid #1e3a5f; padding-bottom: 10px; margin-bottom: 20px; }
-        .a3-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; background: #eef2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .a3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; }
+        .modal-content { background: white; padding: 24px; border-radius: 24px; max-width: 500px; width: 90%; }
+        @media print { .toolbar, .form-panel, .status-bar, .debug-box, .no-print { display: none !important; } }
+        .a3-report { padding: 20px; }
+        .a3-header { text-align: center; border-bottom: 3px solid #1e3a5f; margin-bottom: 20px; }
+        .a3-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #eef2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
+        .a3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
         .a3-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; }
         .a3-card h4 { background: #e0f2fe; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 10px; }
         .full-width { grid-column: span 2; }
@@ -54,11 +45,11 @@
 <div class="container">
     <div class="header">
         <h1>📋 A3 Report - Problem Solving 8 Langkah</h1>
-        <p>Shared Database Multi-Device | Data tersimpan di GitHub</p>
+        <p>Multi-Device Database | Data di GitHub</p>
     </div>
     
     <div class="status-bar">
-        <span>📡 Status: <span id="dbStatus" class="status-offline">Mengecek...</span></span>
+        <span>📡 Cloud: <span id="dbStatus">Mengecek...</span></span>
         <span>💾 Lokal: <span id="localCount">0</span></span>
         <span>☁️ Cloud: <span id="cloudCount">0</span></span>
     </div>
@@ -68,7 +59,7 @@
         <button class="btn-green" id="syncUpBtn">📤 Push ke Cloud</button>
         <button class="btn-orange" id="saveLocalBtn">💾 Simpan Lokal</button>
         <button id="printBtn">🖨️ Cetak</button>
-        <button id="exportExcelBtn" class="btn-green">📊 Excel</button>
+        <button id="exportExcelBtn">📊 Excel</button>
         <button id="clearAllBtn" class="btn-red">🗑️ Clear</button>
         <button id="showListBtn">📋 List Data</button>
     </div>
@@ -89,57 +80,71 @@
             <div class="input-group"><label>🎯 3. TARGET</label><textarea id="target">Menurunkan defect menjadi ≤ 2.5%</textarea></div>
         </div>
         
-        <div class="form-title">🔍 4a. 5 WHY ANALYSIS</div>
-        <table id="whyTable"><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></tr></thead><tbody id="whyBody"></tbody></table>
+        <div class="form-title">🔍 4a. 5 WHY</div>
+        <div id="whyContainer"></div>
         
-        <div class="form-title">🐟 4b. FISHBONE (6M)</div>
+        <div class="form-title">🐟 4b. FISHBONE</div>
         <div class="fishbone-grid" id="fishboneGrid"></div>
         
         <div class="form-title">⚙️ 5. COUNTERMEASURES</div>
-        <table id="counterTable"><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th><th></th></tr></thead><tbody id="counterBody"></tbody></table>
+        <div id="counterContainer"></div>
         <button id="addCounterBtn" style="margin-top:10px; background:#10b981;">+ Tambah</button>
         
         <div class="form-grid" style="margin-top:20px">
-            <div class="input-group"><label>✅ 6. CHECK</label><textarea id="check">Defect turun dari 6.5% menjadi 3.2%</textarea></div>
-            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">Audit harian, jadwal ganti elektroda</textarea></div>
+            <div class="input-group"><label>✅ 6. CHECK</label><textarea id="check">Defect turun menjadi 3.2%</textarea></div>
+            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">Audit harian, ganti elektroda rutin</textarea></div>
         </div>
         
         <div class="form-title">📸 DOKUMENTASI</div>
-        <div class="image-gallery" id="gallery"></div>
+        <div id="gallery"></div>
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
         <button id="addImageBtn" style="margin-top:10px;">+ Tambah Gambar</button>
-        <div style="margin-top:20px; text-align:right"><button id="refreshReportBtn" class="btn-blue">🔄 Refresh</button></div>
+        <div style="margin-top:20px; text-align:right"><button id="refreshBtn" class="btn-blue">🔄 Refresh</button></div>
     </div>
     
     <div class="report-panel"><div id="a3Report" class="a3-report"></div></div>
+    
+    <!-- Debug Console -->
+    <div class="debug-box no-print" id="debugLog">
+        📋 Log akan muncul di sini...
+    </div>
 </div>
 
 <div id="listModal" class="modal"><div class="modal-content"><h3>📋 Data Tersimpan</h3><div id="dataListContainer"></div><button id="closeListBtn">Tutup</button></div></div>
 
 <script>
     // ==================== KONFIGURASI ====================
+    // ⚠️ GANTI DENGAN TOKEN BARU ANDA ⚠️
     const GITHUB_USERNAME = "arisidus29";
     const GITHUB_REPO = "a3-report-app";
     const DATA_FILE = "a3_database.json";
-    const GITHUB_TOKEN = "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";
+    const GITHUB_TOKEN = "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";  // <-- GANTI INI DENGAN TOKEN BARU!
     
     const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${DATA_FILE}`;
     const API_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE}`;
     
+    // Global variables
     let imageList = [];
     let nextImageId = 1;
     let localDatabase = [];
     const LOCAL_DB_KEY = 'a3_report_local_db';
     
-    // ==================== INIT FORM ====================
-    function initWhyTable() {
-        const tbody = document.getElementById('whyBody');
+    function log(msg) {
+        const debug = document.getElementById('debugLog');
+        debug.innerHTML += `\n> ${new Date().toLocaleTimeString()}: ${msg}`;
+        debug.scrollTop = debug.scrollHeight;
+        console.log(msg);
+    }
+    
+    // ==================== FORM INIT ====================
+    function initWhy() {
+        const container = document.getElementById('whyContainer');
         const q = ["Mengapa defect welding meningkat?","Mengapa arus las tidak stabil?","Mengapa kalibrasi overdue?","Mengapa tidak ada jadwal?","Mengapa SOP tidak ada?"];
         const a = ["Arus las tidak stabil","Kalibrasi overdue 3 bulan","Tidak ada jadwal rutin","Tidak ada SOP","Tim engineering belum buat"];
-        tbody.innerHTML = '';
-        for(let i=1;i<=5;i++) {
-            tbody.innerHTML += `<tr><td>${i}</td><td><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
-        }
+        let html = '<table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></tr></thead><tbody>';
+        for(let i=1;i<=5;i++) html += `<tr><td>${i}</td><td><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
+        html += '</tbody></table>';
+        container.innerHTML = html;
     }
     
     function initFishbone() {
@@ -152,10 +157,18 @@
         });
     }
     
+    function initCountermeasures() {
+        const container = document.getElementById('counterContainer');
+        container.innerHTML = '<table><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></tr></thead><tbody id="counterBody"></tbody></table>';
+        addCounterRow("Kalibrasi ulang mesin las", "30 April 2026", "Tim Maintenance");
+        addCounterRow("Ganti elektroda setiap 400 siklus", "25 April 2026", "Shift Leader");
+        addCounterRow("Training standar work", "15 Mei 2026", "Training Dept");
+    }
+    
     function addCounterRow(cm='', target='', pic='') {
         const tbody = document.getElementById('counterBody');
         const row = tbody.insertRow();
-        row.innerHTML = `<td>${tbody.children.length+1}</td><td><textarea class="cm-counter" style="width:100%">${cm}</textarea></td><td><input class="cm-target" value="${target}" style="width:100%"></td><td><input class="cm-pic" value="${pic}" style="width:100%"></td><td><button class="del-row" style="background:#ef4444; border:none; padding:4px 8px; border-radius:8px; color:white;">🗑️</button></td>`;
+        row.innerHTML = `<td>${tbody.children.length+1}</td><td><textarea class="cm-counter" style="width:100%">${cm}</textarea></td><td><input class="cm-target" value="${target}" style="width:100%"></td><td><input class="cm-pic" value="${pic}" style="width:100%"></td><td><button class="del-row" style="background:#ef4444;border:none;padding:4px8px;border-radius:8px;color:white;">🗑️</button></td>`;
         row.querySelector('.del-row').onclick = () => { row.remove(); renumberRows(); };
     }
     
@@ -165,17 +178,20 @@
     
     document.getElementById('addCounterBtn').onclick = () => addCounterRow('','','');
     
+    // Gallery
     function renderGallery() {
         const gallery = document.getElementById('gallery');
         gallery.innerHTML = '';
         imageList.forEach(img => {
             const div = document.createElement('div');
             div.className = 'image-card';
-            div.innerHTML = `<img src="${img.dataUrl}"><div class="delete-img" data-id="${img.id}">✕</div>`;
+            div.style.cssText = 'position:relative;width:100px;height:100px;border-radius:12px;overflow:hidden;border:2px solid #cbd5e1;display:inline-block;margin:4px;';
+            div.innerHTML = `<img src="${img.dataUrl}" style="width:100%;height:100%;object-fit:cover;"><div class="delete-img" data-id="${img.id}" style="position:absolute;top:2px;right:2px;background:red;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">✕</div>`;
             gallery.appendChild(div);
         });
         const add = document.createElement('div');
         add.className = 'add-img';
+        add.style.cssText = 'width:100px;height:100px;border:2px dashed #9ca3af;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;font-size:30px;margin:4px;';
         add.innerHTML = '+';
         add.onclick = () => document.getElementById('fileInput').click();
         gallery.appendChild(add);
@@ -253,9 +269,8 @@
         let imgHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + d.images.map(img => `<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">`).join('') + '</div>';
         document.getElementById('a3Report').innerHTML = `
             <div class="a3-header"><h1>A3 REPORT</h1><p>${escapeHtml(d.title)}</p></div>
-            <div class="a3-info"><div><strong>Tanggal:</strong> ${d.date}</div><div><strong>Waktu:</strong> ${escapeHtml(d.time)}</div><div><strong>Area:</strong> ${escapeHtml(d.area)}</div><div><strong>PIC:</strong> ${escapeHtml(d.pic)}</div><div><strong>Target:</strong> ${d.targetDate}</div><div><strong>PIC Target:</strong> ${escapeHtml(d.targetPic)}</div></div>
-            <div class="a3-grid"><div class="a3-card"><h4>1. BACKGROUND</h4><p>${escapeHtml(d.background)}</p></div><div class="a3-card"><h4>2. CURRENT</h4><p>${escapeHtml(d.current)}</p></div><div class="a3-card"><h4>3. TARGET</h4><p>${escapeHtml(d.target)}</p></div><div class="a3-card"><h4>4a. 5 WHY</h4>${whyHtml}</div><div class="a3-card full-width"><h4>4b. FISHBONE</h4>${fishHtml}</div><div class="a3-card full-width"><h4>5. COUNTERMEASURES</h4>${cmHtml}</div><div class="a3-card"><h4>6. CHECK</h4><p>${escapeHtml(d.check)}</p></div><div class="a3-card"><h4>7. FOLLOW UP</h4><p>${escapeHtml(d.followup)}</p></div><div class="a3-card full-width"><h4>📎 DOKUMENTASI</h4>${imgHtml}</div></div>
-            <div style="text-align:center;font-size:0.7rem;margin-top:20px;border-top:1px solid #ccc;padding-top:10px;">Dicetak: ${new Date().toLocaleString()}</div>`;
+            <div class="a3-info"><div><strong>Tanggal:</strong> ${d.date}</div><div><strong>Waktu:</strong> ${escapeHtml(d.time)}</div><div><strong>Area:</strong> ${escapeHtml(d.area)}</div><div><strong>PIC:</strong> ${escapeHtml(d.pic)}</div><div><strong>Target:</strong> ${d.targetDate}</div></div>
+            <div class="a3-grid"><div class="a3-card"><h4>1. BACKGROUND</h4><p>${escapeHtml(d.background)}</p></div><div class="a3-card"><h4>2. CURRENT</h4><p>${escapeHtml(d.current)}</p></div><div class="a3-card"><h4>3. TARGET</h4><p>${escapeHtml(d.target)}</p></div><div class="a3-card"><h4>4a. 5 WHY</h4>${whyHtml}</div><div class="a3-card full-width"><h4>4b. FISHBONE</h4>${fishHtml}</div><div class="a3-card full-width"><h4>5. COUNTERMEASURES</h4>${cmHtml}</div><div class="a3-card"><h4>6. CHECK</h4><p>${escapeHtml(d.check)}</p></div><div class="a3-card"><h4>7. FOLLOW UP</h4><p>${escapeHtml(d.followup)}</p></div><div class="a3-card full-width"><h4>📎 DOKUMENTASI</h4>${imgHtml}</div></div>`;
     }
     
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
@@ -265,84 +280,118 @@
     function saveLocal() { const data = collectData(); let name = prompt("Nama laporan:", data.title); if(name) { localDatabase.unshift({ id: Date.now(), name, savedAt: new Date().toLocaleString(), data }); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); alert(`✅ Tersimpan: ${name}`); } }
     
     async function pullFromGithub() {
+        log('🔽 Memulai Pull dari GitHub...');
         try {
-            document.getElementById('dbStatus').innerHTML = '⏳ Mengambil...';
             const res = await fetch(RAW_URL);
+            log(`Response status: ${res.status}`);
             if(res.status === 404) {
-                document.getElementById('dbStatus').innerHTML = '📝 Cloud kosong - Push data pertama!';
-                document.getElementById('dbStatus').className = 'status-offline';
-                alert('⚠️ Database cloud masih kosong.\n\nKlik "Push ke Cloud" untuk upload data pertama.');
+                log('❌ File belum ada di GitHub! Push data pertama.');
+                alert('⚠️ Database cloud kosong. Klik "Push ke Cloud" untuk upload data pertama.');
+                document.getElementById('dbStatus').innerHTML = 'Kosong - Push dulu!';
                 return;
             }
             if(!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
+            log(`Data dari cloud: ${JSON.stringify(data).substring(0, 200)}`);
             if(data.database && Array.isArray(data.database)) {
                 localDatabase = data.database;
                 localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
                 loadLocal();
                 document.getElementById('cloudCount').innerText = localDatabase.length;
-                document.getElementById('dbStatus').innerHTML = '☁️ Cloud Terhubung';
-                document.getElementById('dbStatus').className = 'status-online';
+                document.getElementById('dbStatus').innerHTML = '☁️ Terhubung';
                 alert(`✅ Pull berhasil! ${localDatabase.length} laporan.`);
+                log(`✅ Pull sukses, ${localDatabase.length} laporan`);
             }
         } catch(err) {
-            document.getElementById('dbStatus').innerHTML = '⚠️ Gagal konek cloud';
-            document.getElementById('dbStatus').className = 'status-offline';
-            alert(`❌ Error: ${err.message}\n\nPastikan file a3_database.json sudah dibuat di repository!`);
+            log(`❌ Error pull: ${err.message}`);
+            alert(`Error: ${err.message}`);
         }
     }
     
     async function pushToGithub() {
-        if(!GITHUB_TOKEN) { alert("Token belum diisi!"); return; }
+        log('📤 Memulai Push ke GitHub...');
+        if(!GITHUB_TOKEN || GITHUB_TOKEN === "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") {
+            log('❌ Token belum diganti!');
+            alert('⚠️ Token GitHub belum diisi!\n\nBuka file HTML dan ganti GITHUB_TOKEN dengan token baru Anda.');
+            return;
+        }
+        
         const dataPush = { lastUpdated: new Date().toISOString(), database: localDatabase, totalRecords: localDatabase.length };
+        log(`Data akan di-push: ${localDatabase.length} laporan`);
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataPush, null, 2))));
+        
         try {
             let sha = null;
-            const check = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-            if(check.ok) sha = (await check.json()).sha;
+            log('Mengecek file existing...');
+            const checkRes = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
+            log(`Check response: ${checkRes.status}`);
+            if(checkRes.ok) {
+                const existing = await checkRes.json();
+                sha = existing.sha;
+                log(`SHA ditemukan: ${sha.substring(0,10)}...`);
+            }
+            
             const body = { message: `Update A3 DB ${new Date().toLocaleString()}`, content, branch: "main" };
             if(sha) body.sha = sha;
-            const res = await fetch(API_URL, { method: 'PUT', headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-            if(!res.ok) throw new Error(`HTTP ${res.status}`);
+            
+            log('Mengirim data ke GitHub API...');
+            const res = await fetch(API_URL, {
+                method: 'PUT',
+                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
+                body: JSON.stringify(body)
+            });
+            log(`Push response: ${res.status}`);
+            if(!res.ok) {
+                const errText = await res.text();
+                log(`Error detail: ${errText}`);
+                throw new Error(`HTTP ${res.status}: ${errText.substring(0, 100)}`);
+            }
             alert(`✅ Push berhasil! ${localDatabase.length} laporan ke cloud.`);
             document.getElementById('cloudCount').innerText = localDatabase.length;
-            document.getElementById('dbStatus').innerHTML = '☁️ Cloud Terhubung';
-            document.getElementById('dbStatus').className = 'status-online';
-        } catch(err) { alert(`❌ Push gagal: ${err.message}`); }
+            document.getElementById('dbStatus').innerHTML = '☁️ Terhubung';
+            log('✅ Push sukses!');
+        } catch(err) {
+            log(`❌ Push gagal: ${err.message}`);
+            alert(`❌ Push gagal: ${err.message}\n\nCek token dan koneksi internet.`);
+        }
     }
     
     function showList() {
         loadLocal();
         const container = document.getElementById('dataListContainer');
         if(localDatabase.length === 0) container.innerHTML = '<p>Belum ada data</p>';
-        else container.innerHTML = localDatabase.map((item,i) => `<div style="background:#f3f4f6;padding:12px;margin:8px 0;border-radius:12px;"><div><b>${escapeHtml(item.name)}</b></div><div style="font-size:0.7rem;">${item.savedAt} | ${escapeHtml(item.data.pic)}</div><div style="margin-top:8px;"><button class="load-data" data-id="${item.id}" style="background:#2563eb;border:none;padding:4px12px;border-radius:8px;color:white;">Load</button> <button class="del-data" data-id="${item.id}" style="background:#ef4444;border:none;padding:4px12px;border-radius:8px;color:white;">Hapus</button></div></div>`).join('');
+        else container.innerHTML = localDatabase.map((item,i) => `<div style="background:#f3f4f6;padding:12px;margin:8px0;border-radius:12px;"><div><b>${escapeHtml(item.name)}</b></div><div style="font-size:0.7rem;">${item.savedAt}</div><div><button class="load-data" data-id="${item.id}" style="background:#2563eb;border:none;padding:4px12px;border-radius:8px;color:white;">Load</button> <button class="del-data" data-id="${item.id}" style="background:#ef4444;border:none;padding:4px12px;border-radius:8px;color:white;">Hapus</button></div></div>`).join('');
         document.querySelectorAll('.load-data').forEach(btn => btn.onclick = () => { let f = localDatabase.find(d => d.id === parseInt(btn.dataset.id)); if(f) { loadData(f.data); document.getElementById('listModal').style.display = 'none'; } });
         document.querySelectorAll('.del-data').forEach(btn => btn.onclick = () => { if(confirm('Hapus?')) { localDatabase = localDatabase.filter(d => d.id !== parseInt(btn.dataset.id)); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); showList(); } });
         document.getElementById('listModal').style.display = 'flex';
     }
     
+    // Event listeners
     document.getElementById('syncDownBtn').onclick = pullFromGithub;
     document.getElementById('syncUpBtn').onclick = () => { loadLocal(); pushToGithub(); };
     document.getElementById('saveLocalBtn').onclick = saveLocal;
     document.getElementById('printBtn').onclick = () => window.print();
-    document.getElementById('exportExcelBtn').onclick = () => { let d = collectData(); let ws = XLSX.utils.aoa_to_sheet([["A3 REPORT"],["JUDUL",d.title],["TANGGAL",d.date],["PIC",d.pic],["BACKGROUND",d.background]]); XLSX.writeFile(XLSX.utils.book_new(), ws, `A3_${d.title}.xlsx`); };
+    document.getElementById('exportExcelBtn').onclick = () => { let d = collectData(); let ws = XLSX.utils.aoa_to_sheet([["A3 REPORT"],["JUDUL",d.title],["TANGGAL",d.date],["PIC",d.pic]]); XLSX.writeFile(XLSX.utils.book_new(), ws, `A3_${d.title}.xlsx`); };
     document.getElementById('clearAllBtn').onclick = () => { if(confirm('Clear semua?')) location.reload(); };
-    document.getElementById('refreshReportBtn').onclick = renderReport;
+    document.getElementById('refreshBtn').onclick = renderReport;
     document.getElementById('showListBtn').onclick = showList;
     document.getElementById('closeListBtn').onclick = () => document.getElementById('listModal').style.display = 'none';
     window.onclick = (e) => { if(e.target === document.getElementById('listModal')) document.getElementById('listModal').style.display = 'none'; };
     
     function init() {
-        initWhyTable(); initFishbone();
-        addCounterRow("Kalibrasi ulang mesin las", "30 April 2026", "Tim Maintenance");
-        addCounterRow("Ganti elektroda", "25 April 2026", "Shift Leader");
-        addCounterRow("Training operator", "15 Mei 2026", "Training Dept");
-        renderGallery(); loadLocal(); renderReport();
-        document.getElementById('dbStatus').innerHTML = '⏳ Cek cloud...';
+        log('🚀 Aplikasi dimulai...');
+        initWhy();
+        initFishbone();
+        initCountermeasures();
+        renderGallery();
+        loadLocal();
+        renderReport();
+        
+        // Test connection
         fetch(RAW_URL).then(res => {
-            if(res.ok) document.getElementById('dbStatus').innerHTML = '☁️ Cloud siap';
-            else document.getElementById('dbStatus').innerHTML = '⚠️ Buat file a3_database.json di repo!';
-        }).catch(() => document.getElementById('dbStatus').innerHTML = '⚠️ Buat file a3_database.json!');
+            if(res.ok) { document.getElementById('dbStatus').innerHTML = '☁️ Cloud siap'; log('✅ Cloud terdeteksi'); }
+            else { document.getElementById('dbStatus').innerHTML = '⚠️ Perlu Push pertama'; log('⚠️ File cloud belum ada'); }
+        }).catch(err => { log(`❌ Gagal cek cloud: ${err.message}`); });
     }
     init();
 </script>
