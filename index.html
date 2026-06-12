@@ -3,60 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A3 Report - Fix Sync</title>
+    <title>A3 Report - Multi Device Database</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { background: #e2e8f0; font-family: 'Segoe UI', sans-serif; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; }
         .header { background: linear-gradient(135deg, #1e3a5f, #0f2c3f); color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
         .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; }
-        button { background: #2c7da0; border: none; color: white; padding: 10px 20px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        button { background: #2c7da0; border: none; color: white; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: bold; }
         .btn-green { background: #2e7d32; }
         .btn-orange { background: #e65100; }
         .btn-blue { background: #1565c0; }
         .btn-red { background: #c62828; }
+        .status-bar { background: #e0f2fe; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; display: flex; gap: 20px; flex-wrap: wrap; }
         .form-panel, .report-panel { background: white; border-radius: 20px; padding: 24px; margin-bottom: 24px; }
-        .form-title { font-size: 1.3rem; font-weight: bold; margin-bottom: 20px; color: #1e3a5f; border-left: 5px solid #2c7da0; padding-left: 15px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 15px; }
+        .form-title { font-size: 1.2rem; font-weight: bold; margin: 20px 0 15px 0; color: #1e3a5f; border-left: 4px solid #2c7da0; padding-left: 12px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px; }
         .input-group { display: flex; flex-direction: column; }
         .input-group label { font-weight: bold; font-size: 0.75rem; margin-bottom: 5px; }
-        .input-group input, .input-group textarea { padding: 10px; border: 1px solid #cbd5e1; border-radius: 12px; }
+        .input-group input, .input-group textarea { padding: 8px; border: 1px solid #cbd5e1; border-radius: 10px; font-family: inherit; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         th, td { border: 1px solid #cbd5e1; padding: 8px; font-size: 0.8rem; text-align: left; }
         th { background: #e0f2fe; }
         .fishbone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #fefce8; padding: 15px; border-radius: 16px; }
         .fish-cat { background: #fff7ed; padding: 10px; border-radius: 12px; }
         .fish-cat textarea { width: 100%; padding: 6px; border-radius: 8px; }
-        .status-bar { background: #e0f2fe; padding: 10px 15px; border-radius: 12px; margin-bottom: 15px; display: flex; justify-content: space-between; flex-wrap: wrap; }
-        .debug-box { background: #1e1e2e; color: #00ff00; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; margin-top: 10px; max-height: 150px; overflow-y: auto; }
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
-        .modal-content { background: white; padding: 24px; border-radius: 24px; max-width: 500px; width: 90%; }
-        @media print { .toolbar, .form-panel, .status-bar, .debug-box, .no-print { display: none !important; } }
-        .a3-report { padding: 20px; }
-        .a3-header { text-align: center; border-bottom: 3px solid #1e3a5f; margin-bottom: 20px; }
-        .a3-info { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; background: #eef2ff; padding: 15px; border-radius: 12px; margin-bottom: 20px; }
-        .a3-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .a3-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; }
+        .debug-box { background: #1e1e2e; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; margin-top: 15px; max-height: 150px; overflow-y: auto; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .modal-content { background: white; padding: 20px; border-radius: 20px; max-width: 500px; width: 90%; max-height: 70vh; overflow-y: auto; }
+        @media print { .toolbar, .form-panel, .status-bar, .debug-box { display: none; } }
+        .a3-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
         .a3-card h4 { background: #e0f2fe; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 10px; }
         .full-width { grid-column: span 2; }
+        .image-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
+        .image-card { position: relative; width: 100px; height: 100px; border-radius: 12px; overflow: hidden; border: 2px solid #cbd5e1; }
+        .image-card img { width: 100%; height: 100%; object-fit: cover; }
+        .image-card .delete-img { position: absolute; top: 2px; right: 2px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
+        .add-img { width: 100px; height: 100px; border: 2px dashed #9ca3af; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: #f9fafb; font-size: 30px; margin: 4px; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>📋 A3 Report - Problem Solving 8 Langkah</h1>
-        <p>Multi-Device Database | Data di GitHub</p>
+        <p>Shared Database Multi-Device | Data tersimpan di GitHub</p>
     </div>
     
     <div class="status-bar">
-        <span>📡 Cloud: <span id="dbStatus">Mengecek...</span></span>
-        <span>💾 Lokal: <span id="localCount">0</span></span>
-        <span>☁️ Cloud: <span id="cloudCount">0</span></span>
+        <span>📡 Cloud: <span id="cloudStatus">⏳ Cek...</span></span>
+        <span>💾 Lokal: <span id="localCount">0</span> laporan</span>
+        <span>☁️ Cloud: <span id="cloudCount">0</span> laporan</span>
     </div>
     
     <div class="toolbar no-print">
-        <button class="btn-blue" id="syncDownBtn">📥 Pull dari Cloud</button>
-        <button class="btn-green" id="syncUpBtn">📤 Push ke Cloud</button>
+        <button class="btn-blue" id="pullBtn">📥 Pull dari Cloud</button>
+        <button class="btn-green" id="pushBtn">📤 Push ke Cloud</button>
         <button class="btn-orange" id="saveLocalBtn">💾 Simpan Lokal</button>
         <button id="printBtn">🖨️ Cetak</button>
         <button id="exportExcelBtn">📊 Excel</button>
@@ -69,80 +70,83 @@
         <div class="form-grid">
             <div class="input-group"><label>📌 JUDUL</label><input type="text" id="title" value="Peningkatan Defect Welding"></div>
             <div class="input-group"><label>📅 TANGGAL</label><input type="date" id="date" value="2026-06-12"></div>
-            <div class="input-group"><label>⏰ WAKTU</label><input type="text" id="time" value="09:00 - 10:30 WIB"></div>
+            <div class="input-group"><label>⏰ WAKTU</label><input type="text" id="time" value="09:00 WIB"></div>
             <div class="input-group"><label>🏭 AREA</label><input type="text" id="area" value="Plant Karawang"></div>
             <div class="input-group"><label>👤 PIC LEADER</label><input type="text" id="pic" value="Budi Santoso"></div>
-            <div class="input-group"><label>👥 MEMBER</label><textarea id="members">Andi, Siti, Rudi, Dewi</textarea></div>
-            <div class="input-group"><label>📅 TARGET</label><input type="date" id="targetDate" value="2026-07-10"></div>
+            <div class="input-group"><label>👥 MEMBER</label><textarea id="members">Andi, Siti, Rudi</textarea></div>
+            <div class="input-group"><label>📅 TARGET DATE</label><input type="date" id="targetDate" value="2026-07-10"></div>
             <div class="input-group"><label>👤 PIC TARGET</label><input type="text" id="targetPic" value="Budi Santoso"></div>
-            <div class="input-group"><label>📖 1. BACKGROUND</label><textarea id="background">Defect welding meningkat dari 2% menjadi 6.5%</textarea></div>
-            <div class="input-group"><label>📊 2. CURRENT</label><textarea id="current">Defect tertinggi di station las 3 dan 4</textarea></div>
-            <div class="input-group"><label>🎯 3. TARGET</label><textarea id="target">Menurunkan defect menjadi ≤ 2.5%</textarea></div>
+            <div class="input-group"><label>📖 1. BACKGROUND</label><textarea id="background">Defect meningkat 2% ke 6.5% dalam 2 minggu</textarea></div>
+            <div class="input-group"><label>📊 2. CURRENT</label><textarea id="current">Defect tertinggi di station 3 dan 4</textarea></div>
+            <div class="input-group"><label>🎯 3. TARGET</label><textarea id="target">Turunkan defect menjadi ≤2.5% dalam 4 minggu</textarea></div>
         </div>
         
-        <div class="form-title">🔍 4a. 5 WHY</div>
+        <div class="form-title">🔍 4a. 5 WHY ANALYSIS</div>
         <div id="whyContainer"></div>
         
-        <div class="form-title">🐟 4b. FISHBONE</div>
+        <div class="form-title">🐟 4b. FISHBONE DIAGRAM (6M)</div>
         <div class="fishbone-grid" id="fishboneGrid"></div>
         
         <div class="form-title">⚙️ 5. COUNTERMEASURES</div>
         <div id="counterContainer"></div>
-        <button id="addCounterBtn" style="margin-top:10px; background:#10b981;">+ Tambah</button>
+        <button id="addCounterBtn" style="margin-top:5px; background:#10b981;">+ Tambah Baris</button>
         
-        <div class="form-grid" style="margin-top:20px">
-            <div class="input-group"><label>✅ 6. CHECK</label><textarea id="check">Defect turun menjadi 3.2%</textarea></div>
-            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">Audit harian, ganti elektroda rutin</textarea></div>
+        <div class="form-grid" style="margin-top:15px">
+            <div class="input-group"><label>✅ 6. CHECK / VERIFICATION</label><textarea id="check">Setelah 2 minggu, defect turun dari 6.5% menjadi 3.2%</textarea></div>
+            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">- Audit harian oleh supervisor\n- Jadwal ganti elektroda rutin\n- Review bulanan</textarea></div>
         </div>
         
-        <div class="form-title">📸 DOKUMENTASI</div>
-        <div id="gallery"></div>
+        <div class="form-title">📸 DOKUMENTASI PENDUKUNG</div>
+        <div id="gallery" class="image-gallery"></div>
         <input type="file" id="fileInput" accept="image/*" multiple style="display:none">
         <button id="addImageBtn" style="margin-top:10px;">+ Tambah Gambar</button>
-        <div style="margin-top:20px; text-align:right"><button id="refreshBtn" class="btn-blue">🔄 Refresh</button></div>
+        
+        <div style="margin-top:20px; text-align:right">
+            <button id="refreshBtn" class="btn-blue">🔄 Refresh Tampilan</button>
+        </div>
     </div>
     
-    <div class="report-panel"><div id="a3Report" class="a3-report"></div></div>
+    <div class="report-panel">
+        <div id="report"></div>
+    </div>
     
-    <!-- Debug Console -->
     <div class="debug-box no-print" id="debugLog">
-        📋 Log akan muncul di sini...
+        📋 Log akan muncul disini...
     </div>
 </div>
 
-<div id="listModal" class="modal"><div class="modal-content"><h3>📋 Data Tersimpan</h3><div id="dataListContainer"></div><button id="closeListBtn">Tutup</button></div></div>
+<div id="listModal" class="modal"><div class="modal-content"><h3>📋 Data Tersimpan</h3><div id="listContainer"></div><button id="closeListBtn">Tutup</button></div></div>
 
 <script>
     // ==================== KONFIGURASI ====================
-    // ⚠️ GANTI DENGAN TOKEN BARU ANDA ⚠️
+    // Token sudah diisi dengan token baru Anda
     const GITHUB_USERNAME = "arisidus29";
     const GITHUB_REPO = "a3-report-app";
     const DATA_FILE = "a3_database.json";
-    const GITHUB_TOKEN = "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";  // <-- GANTI INI DENGAN TOKEN BARU!
+    const GITHUB_TOKEN = "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";  // Token baru sudah diisi!
     
     const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${DATA_FILE}`;
     const API_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE}`;
     
-    // Global variables
     let imageList = [];
     let nextImageId = 1;
     let localDatabase = [];
-    const LOCAL_DB_KEY = 'a3_report_local_db';
+    const LOCAL_DB_KEY = 'a3_simple_db';
     
     function log(msg) {
         const debug = document.getElementById('debugLog');
-        debug.innerHTML += `\n> ${new Date().toLocaleTimeString()}: ${msg}`;
+        debug.innerHTML += `\n[${new Date().toLocaleTimeString()}] ${msg}`;
         debug.scrollTop = debug.scrollHeight;
         console.log(msg);
     }
     
-    // ==================== FORM INIT ====================
+    // ==================== INIT FORM ====================
     function initWhy() {
         const container = document.getElementById('whyContainer');
         const q = ["Mengapa defect welding meningkat?","Mengapa arus las tidak stabil?","Mengapa kalibrasi overdue?","Mengapa tidak ada jadwal?","Mengapa SOP tidak ada?"];
         const a = ["Arus las tidak stabil","Kalibrasi overdue 3 bulan","Tidak ada jadwal rutin","Tidak ada SOP","Tim engineering belum buat"];
-        let html = '<table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></tr></thead><tbody>';
-        for(let i=1;i<=5;i++) html += `<tr><td>${i}</td><td><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
+        let html = '</table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban / Akar Masalah</th></tr></thead><tbody>';
+        for(let i=1;i<=5;i++) html += `<tr><td width="10%">${i}</td><td width="45%"><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td width="45%"><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
         html += '</tbody></table>';
         container.innerHTML = html;
     }
@@ -150,52 +154,58 @@
     function initFishbone() {
         const grid = document.getElementById('fishboneGrid');
         const cats = ['Manusia','Mesin','Material','Metode','Pengukuran','Lingkungan'];
-        const def = ['Kurang training','Kalibrasi overdue','Material tidak konsisten','Tidak ada standar','Alat ukur tidak kalibrasi','Pencahayaan kurang'];
+        const def = ['Kurang training, operator baru','Kalibrasi overdue, elektroda aus','Ketebalan plat tidak konsisten','Tidak ada standar setting arus','Alat ukur tidak terkalibrasi','Penerangan kurang, suhu panas'];
         grid.innerHTML = '';
         cats.forEach((cat,i) => {
             grid.innerHTML += `<div class="fish-cat"><strong>${cat}</strong><textarea id="fish_${cat.toLowerCase()}" rows="2">${def[i]}</textarea></div>`;
         });
     }
     
-    function initCountermeasures() {
+    function initCounter() {
         const container = document.getElementById('counterContainer');
-        container.innerHTML = '<table><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></tr></thead><tbody id="counterBody"></tbody></table>';
-        addCounterRow("Kalibrasi ulang mesin las", "30 April 2026", "Tim Maintenance");
-        addCounterRow("Ganti elektroda setiap 400 siklus", "25 April 2026", "Shift Leader");
-        addCounterRow("Training standar work", "15 Mei 2026", "Training Dept");
+        container.innerHTML = '<table><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></thead><tbody id="counterBody"></tbody><tr>';
+        addRow("Kalibrasi ulang mesin las", "30 April 2026", "Tim Maintenance");
+        addRow("Ganti elektroda setiap 400 siklus", "25 April 2026", "Shift Leader");
+        addRow("Training standar work untuk operator baru", "15 Mei 2026", "Training Dept");
     }
     
-    function addCounterRow(cm='', target='', pic='') {
+    function addRow(cm='', target='', pic='') {
         const tbody = document.getElementById('counterBody');
         const row = tbody.insertRow();
-        row.innerHTML = `<td>${tbody.children.length+1}</td><td><textarea class="cm-counter" style="width:100%">${cm}</textarea></td><td><input class="cm-target" value="${target}" style="width:100%"></td><td><input class="cm-pic" value="${pic}" style="width:100%"></td><td><button class="del-row" style="background:#ef4444;border:none;padding:4px8px;border-radius:8px;color:white;">🗑️</button></td>`;
-        row.querySelector('.del-row').onclick = () => { row.remove(); renumberRows(); };
+        row.innerHTML = `<td>${tbody.children.length+1}</td>
+            <td><textarea class="cm" style="width:100%" rows="2">${cm}</textarea></td>
+            <td><input class="tg" value="${target}" style="width:100%"></td>
+            <td><input class="pc" value="${pic}" style="width:100%"></td>
+            <td><button class="delRow" style="background:red;border:none;padding:4px 8px;border-radius:6px;color:white;">🗑️</button></td>`;
+        row.querySelector('.delRow').onclick = () => { row.remove(); renumber(); };
     }
     
-    function renumberRows() {
-        document.querySelectorAll('#counterBody tr').forEach((row,i) => row.cells[0].innerText = i+1);
-    }
+    function renumber() { document.querySelectorAll('#counterBody tr').forEach((r,i)=> r.cells[0].innerText = i+1); }
+    document.getElementById('addCounterBtn').onclick = () => addRow('','','');
     
-    document.getElementById('addCounterBtn').onclick = () => addCounterRow('','','');
-    
-    // Gallery
+    // Gallery functions
     function renderGallery() {
         const gallery = document.getElementById('gallery');
         gallery.innerHTML = '';
         imageList.forEach(img => {
             const div = document.createElement('div');
             div.className = 'image-card';
-            div.style.cssText = 'position:relative;width:100px;height:100px;border-radius:12px;overflow:hidden;border:2px solid #cbd5e1;display:inline-block;margin:4px;';
-            div.innerHTML = `<img src="${img.dataUrl}" style="width:100%;height:100%;object-fit:cover;"><div class="delete-img" data-id="${img.id}" style="position:absolute;top:2px;right:2px;background:red;color:white;border-radius:50%;width:20px;height:20px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">✕</div>`;
+            div.innerHTML = `<img src="${img.dataUrl}"><div class="delete-img" data-id="${img.id}">✕</div>`;
             gallery.appendChild(div);
         });
-        const add = document.createElement('div');
-        add.className = 'add-img';
-        add.style.cssText = 'width:100px;height:100px;border:2px dashed #9ca3af;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;background:#f9fafb;font-size:30px;margin:4px;';
-        add.innerHTML = '+';
-        add.onclick = () => document.getElementById('fileInput').click();
-        gallery.appendChild(add);
-        document.querySelectorAll('.delete-img').forEach(btn => btn.onclick = () => { imageList = imageList.filter(i => i.id !== parseInt(btn.dataset.id)); renderGallery(); renderReport(); });
+        const addDiv = document.createElement('div');
+        addDiv.className = 'add-img';
+        addDiv.innerHTML = '+';
+        addDiv.onclick = () => document.getElementById('fileInput').click();
+        gallery.appendChild(addDiv);
+        
+        document.querySelectorAll('.delete-img').forEach(btn => {
+            btn.onclick = () => {
+                imageList = imageList.filter(i => i.id !== parseInt(btn.dataset.id));
+                renderGallery();
+                renderReport();
+            };
+        });
     }
     
     document.getElementById('addImageBtn').onclick = () => document.getElementById('fileInput').click();
@@ -203,7 +213,11 @@
         Array.from(e.target.files).forEach(file => {
             if(file.type.startsWith('image/')) {
                 const reader = new FileReader();
-                reader.onload = (ev) => { imageList.push({ id: nextImageId++, dataUrl: ev.target.result }); renderGallery(); renderReport(); };
+                reader.onload = (ev) => {
+                    imageList.push({ id: nextImageId++, dataUrl: ev.target.result });
+                    renderGallery();
+                    renderReport();
+                };
                 reader.readAsDataURL(file);
             }
         });
@@ -211,12 +225,10 @@
     };
     
     function collectData() {
-        const why = [];
-        for(let i=1;i<=5;i++) why.push({ why:i, question: document.getElementById(`whyQ${i}`).value, answer: document.getElementById(`whyA${i}`).value });
+        const why = []; for(let i=1;i<=5;i++) why.push({ q: document.getElementById(`whyQ${i}`).value, a: document.getElementById(`whyA${i}`).value });
         const fish = {};
         ['Manusia','Mesin','Material','Metode','Pengukuran','Lingkungan'].forEach(c => fish[c] = document.getElementById(`fish_${c.toLowerCase()}`).value);
-        const cm = [];
-        document.querySelectorAll('#counterBody tr').forEach(row => cm.push({ counter: row.querySelector('.cm-counter').value, target: row.querySelector('.cm-target').value, pic: row.querySelector('.cm-pic').value }));
+        const cm = []; document.querySelectorAll('#counterBody tr').forEach(r => cm.push({ cm: r.querySelector('.cm').value, target: r.querySelector('.tg').value, pic: r.querySelector('.pc').value }));
         return {
             id: Date.now(), createdAt: new Date().toISOString(),
             title: document.getElementById('title').value, date: document.getElementById('date').value,
@@ -224,9 +236,9 @@
             pic: document.getElementById('pic').value, members: document.getElementById('members').value,
             targetDate: document.getElementById('targetDate').value, targetPic: document.getElementById('targetPic').value,
             background: document.getElementById('background').value, current: document.getElementById('current').value,
-            target: document.getElementById('target').value, fiveWhy: why, fishbone: fish,
-            countermeasures: cm, check: document.getElementById('check').value,
-            followup: document.getElementById('followup').value, images: imageList.map(i => i.dataUrl)
+            target: document.getElementById('target').value, fiveWhy: why, fishbone: fish, countermeasures: cm,
+            check: document.getElementById('check').value, followup: document.getElementById('followup').value,
+            images: imageList.map(i => i.dataUrl)
         };
     }
     
@@ -245,11 +257,11 @@
         document.getElementById('target').value = data.target || '';
         document.getElementById('check').value = data.check || '';
         document.getElementById('followup').value = data.followup || '';
-        if(data.fiveWhy) data.fiveWhy.forEach(w => { document.getElementById(`whyQ${w.why}`).value = w.question; document.getElementById(`whyA${w.why}`).value = w.answer; });
+        if(data.fiveWhy) for(let i=1;i<=5;i++) { document.getElementById(`whyQ${i}`).value = data.fiveWhy[i-1]?.q || ''; document.getElementById(`whyA${i}`).value = data.fiveWhy[i-1]?.a || ''; }
         if(data.fishbone) Object.keys(data.fishbone).forEach(c => { let el = document.getElementById(`fish_${c.toLowerCase()}`); if(el) el.value = data.fishbone[c]; });
         document.getElementById('counterBody').innerHTML = '';
-        if(data.countermeasures && data.countermeasures.length) data.countermeasures.forEach(cm => addCounterRow(cm.counter, cm.target, cm.pic));
-        else addCounterRow('','','');
+        if(data.countermeasures && data.countermeasures.length) data.countermeasures.forEach(c => addRow(c.cm, c.target, c.pic));
+        else addRow('','','');
         imageList = (data.images || []).map((img,i) => ({ id: nextImageId++, dataUrl: img }));
         renderGallery();
         renderReport();
@@ -257,141 +269,144 @@
     
     function renderReport() {
         const d = collectData();
-        let whyHtml = '<table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></tr></thead><tbody>';
-        d.fiveWhy.forEach(w => whyHtml += `<tr><td>${w.why}</td><td>${escapeHtml(w.question)}</td><td>${escapeHtml(w.answer)}</td></tr>`);
+        let whyHtml = '<table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></thead><tbody>';
+        d.fiveWhy.forEach((w,i) => whyHtml += `<tr><td>${i+1}</td><td>${escapeHtml(w.q)}</td><td>${escapeHtml(w.a)}</td></tr>`);
         whyHtml += '</tbody></table>';
+        
         let fishHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
         Object.keys(d.fishbone).forEach(c => fishHtml += `<div style="flex:1;background:#fff7ed;padding:8px;border-radius:8px;"><strong>${c}:</strong><br>${escapeHtml(d.fishbone[c])}</div>`);
         fishHtml += '</div>';
-        let cmHtml = '<table><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th></tr></thead><tbody>';
-        d.countermeasures.forEach((cm,i) => cmHtml += `<tr><td>${i+1}</td><td>${escapeHtml(cm.counter)}</td><td>${escapeHtml(cm.target)}</td><td>${escapeHtml(cm.pic)}</td></tr>`);
+        
+        let cmHtml = '<table><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th></thead><tbody>';
+        d.countermeasures.forEach((c,i) => cmHtml += `<tr><td>${i+1}</td><td>${escapeHtml(c.cm)}</td><td>${escapeHtml(c.target)}</td><td>${escapeHtml(c.pic)}</td></tr>`);
         cmHtml += '</tbody></table>';
+        
         let imgHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">' + d.images.map(img => `<img src="${img}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;">`).join('') + '</div>';
-        document.getElementById('a3Report').innerHTML = `
-            <div class="a3-header"><h1>A3 REPORT</h1><p>${escapeHtml(d.title)}</p></div>
-            <div class="a3-info"><div><strong>Tanggal:</strong> ${d.date}</div><div><strong>Waktu:</strong> ${escapeHtml(d.time)}</div><div><strong>Area:</strong> ${escapeHtml(d.area)}</div><div><strong>PIC:</strong> ${escapeHtml(d.pic)}</div><div><strong>Target:</strong> ${d.targetDate}</div></div>
-            <div class="a3-grid"><div class="a3-card"><h4>1. BACKGROUND</h4><p>${escapeHtml(d.background)}</p></div><div class="a3-card"><h4>2. CURRENT</h4><p>${escapeHtml(d.current)}</p></div><div class="a3-card"><h4>3. TARGET</h4><p>${escapeHtml(d.target)}</p></div><div class="a3-card"><h4>4a. 5 WHY</h4>${whyHtml}</div><div class="a3-card full-width"><h4>4b. FISHBONE</h4>${fishHtml}</div><div class="a3-card full-width"><h4>5. COUNTERMEASURES</h4>${cmHtml}</div><div class="a3-card"><h4>6. CHECK</h4><p>${escapeHtml(d.check)}</p></div><div class="a3-card"><h4>7. FOLLOW UP</h4><p>${escapeHtml(d.followup)}</p></div><div class="a3-card full-width"><h4>📎 DOKUMENTASI</h4>${imgHtml}</div></div>`;
+        
+        document.getElementById('report').innerHTML = `
+            <div style="text-align:center;border-bottom:3px solid #1e3a5f;padding-bottom:10px;margin-bottom:20px;"><h2>A3 REPORT - PROBLEM SOLVING</h2><p>${escapeHtml(d.title)}</p></div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;background:#eef2ff;padding:15px;border-radius:12px;margin-bottom:20px;">
+                <div><strong>Tanggal:</strong> ${d.date}</div><div><strong>Waktu:</strong> ${escapeHtml(d.time)}</div><div><strong>Area:</strong> ${escapeHtml(d.area)}</div>
+                <div><strong>PIC Leader:</strong> ${escapeHtml(d.pic)}</div><div><strong>Target Date:</strong> ${d.targetDate}</div><div><strong>PIC Target:</strong> ${escapeHtml(d.targetPic)}</div>
+            </div>
+            <div class="a3-card"><h4>1. BACKGROUND</h4><p>${escapeHtml(d.background)}</p></div>
+            <div class="a3-card"><h4>2. CURRENT CONDITION</h4><p>${escapeHtml(d.current)}</p></div>
+            <div class="a3-card"><h4>3. TARGET CONDITION</h4><p>${escapeHtml(d.target)}</p></div>
+            <div class="a3-card"><h4>4a. 5 WHY ANALYSIS</h4>${whyHtml}</div>
+            <div class="a3-card"><h4>4b. FISHBONE DIAGRAM</h4>${fishHtml}</div>
+            <div class="a3-card"><h4>5. COUNTERMEASURES</h4>${cmHtml}</div>
+            <div class="a3-card"><h4>6. CHECK / VERIFICATION</h4><p>${escapeHtml(d.check)}</p></div>
+            <div class="a3-card"><h4>7. FOLLOW UP</h4><p>${escapeHtml(d.followup)}</p></div>
+            <div class="a3-card"><h4>📎 DOKUMENTASI</h4>${imgHtml}</div>
+            <div style="text-align:center;font-size:0.7rem;margin-top:20px;border-top:1px solid #ccc;padding-top:10px;">Dicetak: ${new Date().toLocaleString()} | A3 Report System</div>`;
     }
     
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
     
     function loadLocal() { const s = localStorage.getItem(LOCAL_DB_KEY); localDatabase = s ? JSON.parse(s) : []; document.getElementById('localCount').innerText = localDatabase.length; return localDatabase; }
     
-    function saveLocal() { const data = collectData(); let name = prompt("Nama laporan:", data.title); if(name) { localDatabase.unshift({ id: Date.now(), name, savedAt: new Date().toLocaleString(), data }); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); alert(`✅ Tersimpan: ${name}`); } }
+    function saveLocal() {
+        const data = collectData();
+        const name = prompt("Nama laporan ini:", data.title);
+        if(name) { localDatabase.unshift({ id: Date.now(), name, savedAt: new Date().toLocaleString(), data }); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); alert(`✅ Data "${name}" tersimpan di lokal!`); renderReport(); }
+    }
     
     async function pullFromGithub() {
-        log('🔽 Memulai Pull dari GitHub...');
+        log('🔽 Pull dari GitHub...');
         try {
             const res = await fetch(RAW_URL);
-            log(`Response status: ${res.status}`);
-            if(res.status === 404) {
-                log('❌ File belum ada di GitHub! Push data pertama.');
-                alert('⚠️ Database cloud kosong. Klik "Push ke Cloud" untuk upload data pertama.');
-                document.getElementById('dbStatus').innerHTML = 'Kosong - Push dulu!';
-                return;
-            }
+            log(`Status: ${res.status}`);
+            if(res.status === 404) { alert('⚠️ Cloud kosong. Push data pertama!'); log('File belum ada di cloud'); return; }
             if(!res.ok) throw new Error(`HTTP ${res.status}`);
             const data = await res.json();
-            log(`Data dari cloud: ${JSON.stringify(data).substring(0, 200)}`);
             if(data.database && Array.isArray(data.database)) {
                 localDatabase = data.database;
                 localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
                 loadLocal();
                 document.getElementById('cloudCount').innerText = localDatabase.length;
-                document.getElementById('dbStatus').innerHTML = '☁️ Terhubung';
-                alert(`✅ Pull berhasil! ${localDatabase.length} laporan.`);
-                log(`✅ Pull sukses, ${localDatabase.length} laporan`);
+                alert(`✅ Pull berhasil! ${localDatabase.length} laporan dari cloud.`);
+                log(`Pull sukses, ${localDatabase.length} laporan`);
             }
-        } catch(err) {
-            log(`❌ Error pull: ${err.message}`);
-            alert(`Error: ${err.message}`);
-        }
+        } catch(err) { log(`❌ Error: ${err.message}`); alert(`Error: ${err.message}`); }
     }
     
     async function pushToGithub() {
-        log('📤 Memulai Push ke GitHub...');
-        if(!GITHUB_TOKEN || GITHUB_TOKEN === "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") {
-            log('❌ Token belum diganti!');
-            alert('⚠️ Token GitHub belum diisi!\n\nBuka file HTML dan ganti GITHUB_TOKEN dengan token baru Anda.');
-            return;
-        }
+        log('📤 Push ke GitHub...');
+        if(localDatabase.length === 0) { alert('⚠️ Tidak ada data lokal. Simpan data dulu!'); return; }
         
         const dataPush = { lastUpdated: new Date().toISOString(), database: localDatabase, totalRecords: localDatabase.length };
-        log(`Data akan di-push: ${localDatabase.length} laporan`);
         const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataPush, null, 2))));
         
         try {
             let sha = null;
-            log('Mengecek file existing...');
             const checkRes = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-            log(`Check response: ${checkRes.status}`);
-            if(checkRes.ok) {
-                const existing = await checkRes.json();
-                sha = existing.sha;
-                log(`SHA ditemukan: ${sha.substring(0,10)}...`);
-            }
+            log(`Check file: ${checkRes.status}`);
+            if(checkRes.ok) { const existing = await checkRes.json(); sha = existing.sha; log(`SHA ditemukan, akan update`); }
             
             const body = { message: `Update A3 DB ${new Date().toLocaleString()}`, content, branch: "main" };
             if(sha) body.sha = sha;
             
-            log('Mengirim data ke GitHub API...');
             const res = await fetch(API_URL, {
                 method: 'PUT',
                 headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
             });
             log(`Push response: ${res.status}`);
-            if(!res.ok) {
-                const errText = await res.text();
-                log(`Error detail: ${errText}`);
-                throw new Error(`HTTP ${res.status}: ${errText.substring(0, 100)}`);
-            }
+            if(!res.ok) { const err = await res.text(); throw new Error(`${res.status}: ${err.substring(0,100)}`); }
             alert(`✅ Push berhasil! ${localDatabase.length} laporan ke cloud.`);
             document.getElementById('cloudCount').innerText = localDatabase.length;
-            document.getElementById('dbStatus').innerHTML = '☁️ Terhubung';
-            log('✅ Push sukses!');
-        } catch(err) {
-            log(`❌ Push gagal: ${err.message}`);
-            alert(`❌ Push gagal: ${err.message}\n\nCek token dan koneksi internet.`);
-        }
+            document.getElementById('cloudStatus').innerHTML = '☁️ Online';
+            log('Push sukses!');
+        } catch(err) { log(`❌ Push gagal: ${err.message}`); alert(`❌ Push gagal: ${err.message}`); }
     }
     
     function showList() {
         loadLocal();
-        const container = document.getElementById('dataListContainer');
-        if(localDatabase.length === 0) container.innerHTML = '<p>Belum ada data</p>';
-        else container.innerHTML = localDatabase.map((item,i) => `<div style="background:#f3f4f6;padding:12px;margin:8px0;border-radius:12px;"><div><b>${escapeHtml(item.name)}</b></div><div style="font-size:0.7rem;">${item.savedAt}</div><div><button class="load-data" data-id="${item.id}" style="background:#2563eb;border:none;padding:4px12px;border-radius:8px;color:white;">Load</button> <button class="del-data" data-id="${item.id}" style="background:#ef4444;border:none;padding:4px12px;border-radius:8px;color:white;">Hapus</button></div></div>`).join('');
-        document.querySelectorAll('.load-data').forEach(btn => btn.onclick = () => { let f = localDatabase.find(d => d.id === parseInt(btn.dataset.id)); if(f) { loadData(f.data); document.getElementById('listModal').style.display = 'none'; } });
-        document.querySelectorAll('.del-data').forEach(btn => btn.onclick = () => { if(confirm('Hapus?')) { localDatabase = localDatabase.filter(d => d.id !== parseInt(btn.dataset.id)); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); showList(); } });
+        const container = document.getElementById('listContainer');
+        if(localDatabase.length === 0) container.innerHTML = '<p>Belum ada data tersimpan</p>';
+        else container.innerHTML = localDatabase.map((item,i) => `<div style="background:#f3f4f6;padding:10px;margin:8px 0;border-radius:10px;"><b>${escapeHtml(item.name)}</b><br><small>📅 ${item.savedAt} | 👤 ${escapeHtml(item.data.pic)}</small><br><button class="loadItem" data-id="${item.id}" style="background:#2563eb;border:none;padding:4px 12px;border-radius:6px;color:white;margin-top:5px;">📂 Load</button> <button class="delItem" data-id="${item.id}" style="background:red;border:none;padding:4px 12px;border-radius:6px;color:white;">🗑️ Hapus</button></div>`).join('');
+        document.querySelectorAll('.loadItem').forEach(btn => btn.onclick = () => { let f = localDatabase.find(d => d.id === parseInt(btn.dataset.id)); if(f) { loadData(f.data); document.getElementById('listModal').style.display = 'none'; } });
+        document.querySelectorAll('.delItem').forEach(btn => btn.onclick = () => { if(confirm('Hapus data ini?')) { localDatabase = localDatabase.filter(d => d.id !== parseInt(btn.dataset.id)); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); showList(); } });
         document.getElementById('listModal').style.display = 'flex';
     }
     
-    // Event listeners
-    document.getElementById('syncDownBtn').onclick = pullFromGithub;
-    document.getElementById('syncUpBtn').onclick = () => { loadLocal(); pushToGithub(); };
+    function exportToExcel() {
+        const d = collectData();
+        const wsData = [["A3 REPORT"],["JUDUL", d.title],["TANGGAL", d.date],["PIC", d.pic],["BACKGROUND", d.background],["CURRENT", d.current],["TARGET", d.target],["CHECK", d.check],["FOLLOW UP", d.followup]];
+        const ws = XLSX.utils.aoa_to_sheet(wsData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "A3_Report");
+        XLSX.writeFile(wb, `A3_Report_${d.title}.xlsx`);
+    }
+    
+    function clearAll() { if(confirm('Clear semua form dan data lokal?')) { localStorage.removeItem(LOCAL_DB_KEY); location.reload(); } }
+    
+    // Events
+    document.getElementById('pullBtn').onclick = pullFromGithub;
+    document.getElementById('pushBtn').onclick = () => { loadLocal(); pushToGithub(); };
     document.getElementById('saveLocalBtn').onclick = saveLocal;
     document.getElementById('printBtn').onclick = () => window.print();
-    document.getElementById('exportExcelBtn').onclick = () => { let d = collectData(); let ws = XLSX.utils.aoa_to_sheet([["A3 REPORT"],["JUDUL",d.title],["TANGGAL",d.date],["PIC",d.pic]]); XLSX.writeFile(XLSX.utils.book_new(), ws, `A3_${d.title}.xlsx`); };
-    document.getElementById('clearAllBtn').onclick = () => { if(confirm('Clear semua?')) location.reload(); };
+    document.getElementById('exportExcelBtn').onclick = exportToExcel;
+    document.getElementById('clearAllBtn').onclick = clearAll;
     document.getElementById('refreshBtn').onclick = renderReport;
     document.getElementById('showListBtn').onclick = showList;
     document.getElementById('closeListBtn').onclick = () => document.getElementById('listModal').style.display = 'none';
     window.onclick = (e) => { if(e.target === document.getElementById('listModal')) document.getElementById('listModal').style.display = 'none'; };
     
     function init() {
-        log('🚀 Aplikasi dimulai...');
+        log('🚀 Aplikasi A3 Report dimulai...');
+        log(`Token terisi: ${GITHUB_TOKEN.substring(0,15)}...`);
         initWhy();
         initFishbone();
-        initCountermeasures();
+        initCounter();
         renderGallery();
         loadLocal();
         renderReport();
         
-        // Test connection
         fetch(RAW_URL).then(res => {
-            if(res.ok) { document.getElementById('dbStatus').innerHTML = '☁️ Cloud siap'; log('✅ Cloud terdeteksi'); }
-            else { document.getElementById('dbStatus').innerHTML = '⚠️ Perlu Push pertama'; log('⚠️ File cloud belum ada'); }
-        }).catch(err => { log(`❌ Gagal cek cloud: ${err.message}`); });
+            if(res.ok) { document.getElementById('cloudStatus').innerHTML = '☁️ Terhubung'; log('Cloud terhubung'); }
+            else { document.getElementById('cloudStatus').innerHTML = '⚠️ Siap sync pertama'; log('Cloud kosong, siap push pertama'); }
+        }).catch(() => { document.getElementById('cloudStatus').innerHTML = '⚠️ Cek koneksi'; });
     }
     init();
 </script>
