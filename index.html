@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>A3 Report - Multi Device Database</title>
+    <title>A3 Report - Supabase Database</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -11,7 +12,8 @@
         .container { max-width: 1400px; margin: 0 auto; }
         .header { background: linear-gradient(135deg, #1e3a5f, #0f2c3f); color: white; padding: 20px; border-radius: 16px; margin-bottom: 20px; }
         .toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; background: white; padding: 15px; border-radius: 12px; }
-        button { background: #2c7da0; border: none; color: white; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: bold; }
+        button { background: #2c7da0; border: none; color: white; padding: 8px 16px; border-radius: 30px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        button:hover { transform: scale(1.02); }
         .btn-green { background: #2e7d32; }
         .btn-orange { background: #e65100; }
         .btn-blue { background: #1565c0; }
@@ -29,10 +31,11 @@
         .fishbone-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; background: #fefce8; padding: 15px; border-radius: 16px; margin-top: 10px; }
         .fish-cat { background: #fff7ed; padding: 10px; border-radius: 12px; }
         .fish-cat textarea { width: 100%; padding: 6px; border-radius: 8px; }
-        .debug-box { background: #1e1e2e; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; margin-top: 15px; max-height: 150px; overflow-y: auto; }
+        .status-online { color: #2e7d32; font-weight: bold; }
+        .status-offline { color: #c62828; font-weight: bold; }
         .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); justify-content: center; align-items: center; z-index: 1000; }
         .modal-content { background: white; padding: 20px; border-radius: 20px; max-width: 500px; width: 90%; max-height: 70vh; overflow-y: auto; }
-        @media print { .toolbar, .form-panel, .status-bar, .debug-box { display: none; } }
+        @media print { .toolbar, .form-panel, .status-bar { display: none; } }
         .a3-card { border: 1px solid #e2e8f0; border-radius: 12px; padding: 12px; margin-bottom: 15px; }
         .a3-card h4 { background: #e0f2fe; display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; margin-bottom: 10px; }
         .image-gallery { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
@@ -40,45 +43,45 @@
         .image-card img { width: 100%; height: 100%; object-fit: cover; }
         .image-card .delete-img { position: absolute; top: 2px; right: 2px; background: red; color: white; border-radius: 50%; width: 20px; height: 20px; display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; }
         .add-img { width: 100px; height: 100px; border: 2px dashed #9ca3af; border-radius: 12px; display: inline-flex; align-items: center; justify-content: center; cursor: pointer; background: #f9fafb; font-size: 30px; margin: 4px; }
+        .debug-box { background: #1e1e2e; color: #0f0; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 11px; margin-top: 15px; max-height: 150px; overflow-y: auto; }
     </style>
 </head>
 <body>
 <div class="container">
     <div class="header">
         <h1>📋 A3 Report - Problem Solving 8 Langkah</h1>
-        <p>Multi-Device Database | Data di GitHub</p>
+        <p>Multi-Device Database | Supabase Cloud</p>
     </div>
     
     <div class="status-bar">
-        <span>📡 Cloud: <span id="cloudStatus">⏳ Cek...</span></span>
-        <span>💾 Lokal: <span id="localCount">0</span> laporan</span>
-        <span>☁️ Cloud: <span id="cloudCount">0</span> laporan</span>
+        <span>📡 Database: <span id="dbStatus" class="status-offline">⏳ Menghubungkan...</span></span>
+        <span>💾 Data: <span id="dataCount">0</span> laporan</span>
     </div>
     
     <div class="toolbar no-print">
-        <button class="btn-blue" id="pullBtn">📥 Pull dari Cloud</button>
-        <button class="btn-green" id="pushBtn">📤 Push ke Cloud</button>
-        <button class="btn-orange" id="saveLocalBtn">💾 Simpan Lokal</button>
+        <button class="btn-blue" id="syncDownBtn">📥 Sync dari Cloud (Pull)</button>
+        <button class="btn-green" id="syncUpBtn">📤 Sync ke Cloud (Push)</button>
+        <button class="btn-orange" id="saveLocalBtn">💾 Simpan ke Lokal</button>
         <button id="printBtn">🖨️ Cetak</button>
-        <button id="exportExcelBtn">📊 Excel</button>
-        <button id="clearAllBtn" class="btn-red">🗑️ Clear</button>
-        <button id="showListBtn">📋 List Data</button>
+        <button id="exportExcelBtn">📊 Export Excel</button>
+        <button id="clearAllBtn" class="btn-red">🗑️ Clear Form</button>
+        <button id="showListBtn">📋 List Semua Data</button>
     </div>
     
     <div class="form-panel no-print">
         <div class="form-title">📝 Form A3 Report</div>
         <div class="form-grid">
-            <div class="input-group"><label>📌 JUDUL</label><input type="text" id="title" value="Peningkatan Defect Welding"></div>
+            <div class="input-group"><label>📌 JUDUL MASALAH</label><input type="text" id="title" value="Peningkatan Defect Welding pada Line Assy"></div>
             <div class="input-group"><label>📅 TANGGAL</label><input type="date" id="date" value="2026-06-12"></div>
-            <div class="input-group"><label>⏰ WAKTU</label><input type="text" id="time" value="09:00 WIB"></div>
-            <div class="input-group"><label>🏭 AREA</label><input type="text" id="area" value="Plant Karawang"></div>
+            <div class="input-group"><label>⏰ WAKTU</label><input type="text" id="time" value="09:00 - 10:30 WIB"></div>
+            <div class="input-group"><label>🏭 AREA / PLANT</label><input type="text" id="area" value="Plant Karawang - Welding Dept"></div>
             <div class="input-group"><label>👤 PIC LEADER</label><input type="text" id="pic" value="Budi Santoso"></div>
-            <div class="input-group"><label>👥 MEMBER</label><textarea id="members">Andi, Siti, Rudi</textarea></div>
-            <div class="input-group"><label>📅 TARGET DATE</label><input type="date" id="targetDate" value="2026-07-10"></div>
+            <div class="input-group"><label>👥 MEMBER HADIR</label><textarea id="members">Andi Prasetyo, Siti Aminah, Rudi Hartono, Dewi Sartika</textarea></div>
+            <div class="input-group"><label>📅 TANGGAL TARGET</label><input type="date" id="targetDate" value="2026-07-10"></div>
             <div class="input-group"><label>👤 PIC TARGET</label><input type="text" id="targetPic" value="Budi Santoso"></div>
-            <div class="input-group"><label>📖 1. BACKGROUND</label><textarea id="background">Defect meningkat 2% ke 6.5% dalam 2 minggu</textarea></div>
-            <div class="input-group"><label>📊 2. CURRENT</label><textarea id="current">Defect tertinggi di station 3 dan 4</textarea></div>
-            <div class="input-group"><label>🎯 3. TARGET</label><textarea id="target">Turunkan defect menjadi ≤2.5% dalam 4 minggu</textarea></div>
+            <div class="input-group"><label>📖 1. BACKGROUND</label><textarea id="background">Defect welding meningkat dari 2% menjadi 6.5% dalam 2 minggu terakhir</textarea></div>
+            <div class="input-group"><label>📊 2. CURRENT CONDITION</label><textarea id="current">Data shift defect tertinggi di station las nomor 3 dan 4</textarea></div>
+            <div class="input-group"><label>🎯 3. TARGET CONDITION</label><textarea id="target">Menurunkan defect menjadi ≤ 2.5% dalam 4 minggu</textarea></div>
         </div>
         
         <div class="form-title">🔍 4a. 5 WHY ANALYSIS</div>
@@ -87,13 +90,13 @@
         <div class="form-title">🐟 4b. FISHBONE DIAGRAM (6M)</div>
         <div class="fishbone-grid" id="fishboneGrid"></div>
         
-        <div class="form-title">⚙️ 5. COUNTERMEASURES</div>
+        <div class="form-title">⚙️ 5. COUNTERMEASURES (Tindakan Perbaikan)</div>
         <div id="counterContainer"></div>
         <button id="addCounterBtn" style="margin-top:5px; background:#10b981;">+ Tambah Baris</button>
         
         <div class="form-grid" style="margin-top:15px">
-            <div class="input-group"><label>✅ 6. CHECK / VERIFICATION</label><textarea id="check">Setelah 2 minggu, defect turun dari 6.5% menjadi 3.2%</textarea></div>
-            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">- Audit harian oleh supervisor\n- Jadwal ganti elektroda rutin</textarea></div>
+            <div class="input-group"><label>✅ 6. CHECK / VERIFICATION</label><textarea id="check">Setelah 2 minggu implementasi, defect berhasil turun dari 6.5% menjadi 3.2%</textarea></div>
+            <div class="input-group"><label>📌 7. FOLLOW UP</label><textarea id="followup">- Perketat jadwal ganti elektroda\n- Audit harian oleh supervisor\n- Review bulanan</textarea></div>
         </div>
         
         <div class="form-title">📸 DOKUMENTASI PENDUKUNG</div>
@@ -102,7 +105,7 @@
         <button id="addImageBtn" style="margin-top:10px;">+ Tambah Gambar</button>
         
         <div style="margin-top:20px; text-align:right">
-            <button id="refreshBtn" class="btn-blue">🔄 Refresh Tampilan</button>
+            <button id="refreshBtn" class="btn-blue">🔄 Refresh Tampilan Laporan</button>
         </div>
     </div>
     
@@ -115,23 +118,19 @@
     </div>
 </div>
 
-<div id="listModal" class="modal"><div class="modal-content"><h3>📋 Data Tersimpan</h3><div id="listContainer"></div><button id="closeListBtn">Tutup</button></div></div>
+<div id="listModal" class="modal"><div class="modal-content"><h3>📋 Semua Data Tersimpan</h3><div id="listContainer"></div><button id="closeListBtn">Tutup</button></div></div>
 
 <script>
-    // ==================== KONFIGURASI ====================
-    // TOKEN SUDAH DIUPDATE DENGAN TOKEN TERBARU ANDA
-    const GITHUB_USERNAME = "arisidus29";
-    const GITHUB_REPO = "a3-report-app";
-    const DATA_FILE = "a3_database.json";
-    const GITHUB_TOKEN = "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";  // Token terbaru
+    // ==================== KONFIGURASI SUPABASE ====================
+    const SUPABASE_URL = "https://zqtabahuzvphepoznwvt.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpxdGFiYWh1enZwaGVwb3pud3Z0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODEyNDQxNzEsImV4cCI6MjA5NjgyMDE3MX0.MhWKwB5HDozgbnJlz3e8K-Gp73Q_mC-bCRPRaWOamig";
     
-    const RAW_URL = `https://raw.githubusercontent.com/${GITHUB_USERNAME}/${GITHUB_REPO}/main/${DATA_FILE}`;
-    const API_URL = `https://api.github.com/repos/${GITHUB_USERNAME}/${GITHUB_REPO}/contents/${DATA_FILE}`;
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
     
     let imageList = [];
     let nextImageId = 1;
     let localDatabase = [];
-    const LOCAL_DB_KEY = 'a3_simple_db';
+    const LOCAL_DB_KEY = 'a3_supabase_db';
     
     function log(msg) {
         const debug = document.getElementById('debugLog');
@@ -145,9 +144,9 @@
         const container = document.getElementById('whyContainer');
         const q = ["Mengapa defect welding meningkat?","Mengapa arus las tidak stabil?","Mengapa kalibrasi overdue?","Mengapa tidak ada jadwal?","Mengapa SOP tidak ada?"];
         const a = ["Arus las tidak stabil","Kalibrasi overdue 3 bulan","Tidak ada jadwal rutin","Tidak ada SOP","Tim engineering belum buat"];
-        let html = '<tr><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban / Akar Masalah</th></tr></thead><tbody>';
-        for(let i=1;i<=5;i++) html += `<tr><td width="10%">${i}</td><td width="45%"><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td width="45%"><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
-        html += '</tbody></tr>';
+        let html = '<table><thead><tr><th width="10%">Why</th><th width="45%">Pertanyaan</th><th width="45%">Jawaban / Akar Masalah</th></tr></thead><tbody>';
+        for(let i=1;i<=5;i++) html += `<tr><td>${i}</td><td><input type="text" id="whyQ${i}" value="${q[i-1]}" style="width:100%"></td><td><input type="text" id="whyA${i}" value="${a[i-1]}" style="width:100%"></td></tr>`;
+        html += '</tbody></table>';
         container.innerHTML = html;
     }
     
@@ -163,7 +162,7 @@
     
     function initCounter() {
         const container = document.getElementById('counterContainer');
-        container.innerHTML = '<tr><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></thead><tbody id="counterBody"></tbody></table>';
+        container.innerHTML = '<table><thead><tr><th width="5%">No</th><th width="50%">Countermeasure</th><th width="20%">Target</th><th width="20%">PIC</th><th width="5%"></th></thead><tbody id="counterBody"></tbody></table>';
         addRow("Kalibrasi ulang mesin las", "30 April 2026", "Tim Maintenance");
         addRow("Ganti elektroda setiap 400 siklus", "25 April 2026", "Shift Leader");
         addRow("Training standar work untuk operator baru", "15 Mei 2026", "Training Dept");
@@ -176,14 +175,13 @@
             <td><textarea class="cm" style="width:100%" rows="2">${cm}</textarea></td>
             <td><input class="tg" value="${target}" style="width:100%"></td>
             <td><input class="pc" value="${pic}" style="width:100%"></td>
-            <td><button class="delRow" style="background:red;border:none;padding:4px 8px;border-radius:6px;color:white;">🗑️</button></td>`;
+            <td><button class="delRow" style="background:red;border:none;padding:4px 8px;border-radius:6px;color:white;cursor:pointer;">🗑️</button></td>`;
         row.querySelector('.delRow').onclick = () => { row.remove(); renumber(); };
     }
     
     function renumber() { document.querySelectorAll('#counterBody tr').forEach((r,i)=> r.cells[0].innerText = i+1); }
     document.getElementById('addCounterBtn').onclick = () => addRow('','','');
     
-    // Gallery functions
     function renderGallery() {
         const gallery = document.getElementById('gallery');
         gallery.innerHTML = '';
@@ -230,14 +228,23 @@
         ['Manusia','Mesin','Material','Metode','Pengukuran','Lingkungan'].forEach(c => fish[c] = document.getElementById(`fish_${c.toLowerCase()}`).value);
         const cm = []; document.querySelectorAll('#counterBody tr').forEach(r => cm.push({ cm: r.querySelector('.cm').value, target: r.querySelector('.tg').value, pic: r.querySelector('.pc').value }));
         return {
-            id: Date.now(), createdAt: new Date().toISOString(),
-            title: document.getElementById('title').value, date: document.getElementById('date').value,
-            time: document.getElementById('time').value, area: document.getElementById('area').value,
-            pic: document.getElementById('pic').value, members: document.getElementById('members').value,
-            targetDate: document.getElementById('targetDate').value, targetPic: document.getElementById('targetPic').value,
-            background: document.getElementById('background').value, current: document.getElementById('current').value,
-            target: document.getElementById('target').value, fiveWhy: why, fishbone: fish, countermeasures: cm,
-            check: document.getElementById('check').value, followup: document.getElementById('followup').value,
+            id: Date.now(),
+            title: document.getElementById('title').value,
+            date: document.getElementById('date').value,
+            time: document.getElementById('time').value,
+            area: document.getElementById('area').value,
+            pic: document.getElementById('pic').value,
+            members: document.getElementById('members').value,
+            targetDate: document.getElementById('targetDate').value,
+            targetPic: document.getElementById('targetPic').value,
+            background: document.getElementById('background').value,
+            current: document.getElementById('current').value,
+            target: document.getElementById('target').value,
+            fiveWhy: why,
+            fishbone: fish,
+            countermeasures: cm,
+            check: document.getElementById('check').value,
+            followup: document.getElementById('followup').value,
             images: imageList.map(i => i.dataUrl)
         };
     }
@@ -269,15 +276,15 @@
     
     function renderReport() {
         const d = collectData();
-        let whyHtml = '<table><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></thead><tbody>';
-        d.fiveWhy.forEach((w,i) => whyHtml += `<tr><td>${i+1}</td><td>${escapeHtml(w.q)}</td><td>${escapeHtml(w.a)}</td></tr>`);
-        whyHtml += '</tbody></table>';
+        let whyHtml = '<tr><thead><tr><th>Why</th><th>Pertanyaan</th><th>Jawaban</th></thead><tbody>';
+        d.fiveWhy.forEach((w,i) => whyHtml += `<tr><td>${i+1}</td><td>${escapeHtml(w.q)}</td><td>${escapeHtml(w.a)}</td><tr>`);
+        whyHtml += '</tbody><tr>';
         
         let fishHtml = '<div style="display:flex;flex-wrap:wrap;gap:8px;">';
         Object.keys(d.fishbone).forEach(c => fishHtml += `<div style="flex:1;background:#fff7ed;padding:8px;border-radius:8px;"><strong>${c}:</strong><br>${escapeHtml(d.fishbone[c])}</div>`);
         fishHtml += '</div>';
         
-        let cmHtml = '<tr><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th></thead><tbody>';
+        let cmHtml = '<table><thead><tr><th>No</th><th>Countermeasure</th><th>Target</th><th>PIC</th></thead><tbody>';
         d.countermeasures.forEach((c,i) => cmHtml += `<tr><td style="text-align:center">${i+1}</td><td>${escapeHtml(c.cm)}</td><td>${escapeHtml(c.target)}</td><td>${escapeHtml(c.pic)}</td></tr>`);
         cmHtml += '</tbody></table>';
         
@@ -303,104 +310,203 @@
     
     function escapeHtml(s) { if(!s) return ''; return s.replace(/[&<>]/g, m => m==='&'?'&amp;':m==='<'?'&lt;':'&gt;'); }
     
-    function loadLocal() { const s = localStorage.getItem(LOCAL_DB_KEY); localDatabase = s ? JSON.parse(s) : []; document.getElementById('localCount').innerText = localDatabase.length; return localDatabase; }
+    function loadLocal() { 
+        const s = localStorage.getItem(LOCAL_DB_KEY); 
+        localDatabase = s ? JSON.parse(s) : []; 
+        document.getElementById('dataCount').innerText = localDatabase.length; 
+        return localDatabase; 
+    }
     
     function saveLocal() {
         const data = collectData();
         const name = prompt("Nama laporan ini:", data.title);
-        if(name) { localDatabase.unshift({ id: Date.now(), name, savedAt: new Date().toLocaleString(), data }); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); alert(`✅ Data "${name}" tersimpan di lokal!`); renderReport(); }
+        if(name) { 
+            localDatabase.unshift({ id: Date.now(), name, savedAt: new Date().toLocaleString(), data }); 
+            localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); 
+            loadLocal(); 
+            alert(`✅ Data "${name}" tersimpan di lokal!`); 
+            renderReport(); 
+        }
     }
     
-   async function pullFromGithub() {
-    log('🔽 Pull dari GitHub...');
-    try {
-        const res = await fetch(RAW_URL);
-        log(`Status: ${res.status}`);
-        if(res.status === 404) {
-            alert('⚠️ Cloud kosong. Push data pertama!'); 
-            log('File belum ada di cloud'); 
+    // ==================== SUPABASE FUNCTIONS ====================
+    
+    async function createTableIfNotExists() {
+        // Mencoba membuat tabel (akan gagal jika sudah ada, itu tidak masalah)
+        const createTableSQL = `
+            CREATE TABLE IF NOT EXISTS a3_reports (
+                id SERIAL PRIMARY KEY,
+                report_id BIGINT NOT NULL,
+                name TEXT NOT NULL,
+                saved_at TIMESTAMP DEFAULT NOW(),
+                title TEXT,
+                date TEXT,
+                time TEXT,
+                area TEXT,
+                pic_leader TEXT,
+                members TEXT,
+                target_date TEXT,
+                target_pic TEXT,
+                background TEXT,
+                current_condition TEXT,
+                target_condition TEXT,
+                check_verification TEXT,
+                follow_up TEXT,
+                five_why JSONB,
+                fishbone JSONB,
+                countermeasures JSONB,
+                images TEXT[]
+            );
+        `;
+        // Note: Ini hanya untuk dokumentasi, tabel perlu dibuat manual di dashboard Supabase
+        log('⚠️ Pastikan tabel "a3_reports" sudah dibuat di Supabase dashboard!');
+    }
+    
+    async function syncFromSupabase() {
+        log('📥 Sync dari Supabase (Pull)...');
+        try {
+            document.getElementById('dbStatus').innerHTML = '⏳ Mengambil data...';
+            const { data, error } = await supabase
+                .from('a3_reports')
+                .select('*')
+                .order('saved_at', { ascending: false });
+            
+            if(error) throw error;
+            
+            log(`✅ Berhasil mengambil ${data.length} data dari Supabase`);
+            localDatabase = data.map(row => ({
+                id: row.report_id,
+                name: row.name,
+                savedAt: new Date(row.saved_at).toLocaleString(),
+                data: {
+                    title: row.title,
+                    date: row.date,
+                    time: row.time,
+                    area: row.area,
+                    pic: row.pic_leader,
+                    members: row.members,
+                    targetDate: row.target_date,
+                    targetPic: row.target_pic,
+                    background: row.background,
+                    current: row.current_condition,
+                    target: row.target_condition,
+                    check: row.check_verification,
+                    followup: row.follow_up,
+                    fiveWhy: row.five_why || [],
+                    fishbone: row.fishbone || {},
+                    countermeasures: row.countermeasures || [],
+                    images: row.images || []
+                }
+            }));
+            
+            localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
+            document.getElementById('dataCount').innerText = localDatabase.length;
+            document.getElementById('dbStatus').innerHTML = '☁️ Terhubung ke Supabase';
+            document.getElementById('dbStatus').className = 'status-online';
+            alert(`✅ Sync berhasil! ${localDatabase.length} laporan dari cloud.`);
+            renderReport();
+        } catch(err) {
+            log(`❌ Error: ${err.message}`);
+            document.getElementById('dbStatus').innerHTML = '⚠️ Gagal koneksi';
+            document.getElementById('dbStatus').className = 'status-offline';
+            
+            if(err.message.includes('relation "a3_reports" does not exist')) {
+                alert('❌ Tabel belum dibuat!\n\nSilakan buat tabel "a3_reports" di dashboard Supabase SQL Editor dengan query:\n\n' +
+                    'CREATE TABLE a3_reports (\n' +
+                    '  id SERIAL PRIMARY KEY,\n' +
+                    '  report_id BIGINT NOT NULL,\n' +
+                    '  name TEXT NOT NULL,\n' +
+                    '  saved_at TIMESTAMP DEFAULT NOW(),\n' +
+                    '  title TEXT,\n' +
+                    '  date TEXT,\n' +
+                    '  time TEXT,\n' +
+                    '  area TEXT,\n' +
+                    '  pic_leader TEXT,\n' +
+                    '  members TEXT,\n' +
+                    '  target_date TEXT,\n' +
+                    '  target_pic TEXT,\n' +
+                    '  background TEXT,\n' +
+                    '  current_condition TEXT,\n' +
+                    '  target_condition TEXT,\n' +
+                    '  check_verification TEXT,\n' +
+                    '  follow_up TEXT,\n' +
+                    '  five_why JSONB,\n' +
+                    '  fishbone JSONB,\n' +
+                    '  countermeasures JSONB,\n' +
+                    '  images TEXT[]\n' +
+                    ');');
+            } else {
+                alert(`❌ Gagal sync: ${err.message}`);
+            }
+        }
+    }
+    
+    async function syncToSupabase() {
+        log('📤 Sync ke Supabase (Push)...');
+        
+        if(localDatabase.length === 0) {
+            alert('⚠️ Tidak ada data lokal. Simpan data dulu!');
             return;
         }
-        if(!res.ok) throw new Error(`HTTP ${res.status}`);
-        const data = await res.json();
-        if(data.database && Array.isArray(data.database)) {
-            localDatabase = data.database;
-            localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
-            loadLocal();
-            document.getElementById('cloudCount').innerText = localDatabase.length;
-            alert(`✅ Pull berhasil! ${localDatabase.length} laporan dari cloud.`);
-            log(`Pull sukses, ${localDatabase.length} laporan`);
-        } else {
-            throw new Error('Format data tidak valid');
-        }
-    } catch(err) {
-        log(`❌ Error: ${err.message}`); 
-        alert(`Error: ${err.message}`);
-    }
-}
-
-async function pushToGithub() {
-    log('📤 Push ke GitHub...');
-    if(localDatabase.length === 0) {
-        alert('⚠️ Tidak ada data lokal. Simpan data dulu!'); 
-        return;
-    }
-
-    const dataPush = { 
-        lastUpdated: new Date().toISOString(), 
-        database: localDatabase, 
-        totalRecords: localDatabase.length 
-    };
-    const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataPush, null, 2))));
-
-    try {
-        let sha = null;
-        const checkRes = await fetch(API_URL, { 
-            headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
-        });
-        log(`Check file: ${checkRes.status}`);
-        if(checkRes.ok) {
-            const existing = await checkRes.json(); 
-            sha = existing.sha; 
-            log(`SHA ditemukan, akan update`);
-        }
-
-        const body = { 
-            message: `Update A3 DB ${new Date().toLocaleString()}`, 
-            content: content, 
-            branch: "main" 
-        };
-        if(sha) body.sha = sha;
-
-        const res = await fetch(API_URL, {
-            method: 'PUT',
-            headers: { 
-                'Authorization': `token ${GITHUB_TOKEN}`, 
-                'Content-Type': 'application/json' 
-            },
-            body: JSON.stringify(body)
-        });
         
-        log(`Push response: ${res.status}`);
-        if(!res.ok) { 
-            const err = await res.text(); 
-            throw new Error(`${res.status}: ${err.substring(0,100)}`); 
+        try {
+            // Hapus semua data lama
+            const { error: deleteError } = await supabase
+                .from('a3_reports')
+                .delete()
+                .neq('id', 0);
+            
+            if(deleteError) throw deleteError;
+            
+            // Insert data baru
+            let successCount = 0;
+            for(const item of localDatabase) {
+                const data = item.data;
+                const { error: insertError } = await supabase
+                    .from('a3_reports')
+                    .insert({
+                        report_id: item.id,
+                        name: item.name,
+                        saved_at: new Date().toISOString(),
+                        title: data.title,
+                        date: data.date,
+                        time: data.time,
+                        area: data.area,
+                        pic_leader: data.pic,
+                        members: data.members,
+                        target_date: data.targetDate,
+                        target_pic: data.targetPic,
+                        background: data.background,
+                        current_condition: data.current,
+                        target_condition: data.target,
+                        check_verification: data.check,
+                        follow_up: data.followup,
+                        five_why: data.fiveWhy || [],
+                        fishbone: data.fishbone || {},
+                        countermeasures: data.countermeasures || [],
+                        images: data.images || []
+                    });
+                
+                if(insertError) throw insertError;
+                successCount++;
+            }
+            
+            log(`✅ Berhasil menyimpan ${successCount} data ke Supabase`);
+            document.getElementById('dataCount').innerText = localDatabase.length;
+            document.getElementById('dbStatus').innerHTML = '☁️ Terhubung ke Supabase';
+            document.getElementById('dbStatus').className = 'status-online';
+            alert(`✅ Push berhasil! ${successCount} laporan ke cloud.`);
+        } catch(err) {
+            log(`❌ Error: ${err.message}`);
+            alert(`❌ Gagal push: ${err.message}`);
         }
-        alert(`✅ Push berhasil! ${localDatabase.length} laporan ke cloud.`);
-        document.getElementById('cloudCount').innerText = localDatabase.length;
-        document.getElementById('cloudStatus').innerHTML = '☁️ Online';
-        log('Push sukses!');
-    } catch(err) { 
-        log(`❌ Push gagal: ${err.message}`); 
-        alert(`❌ Push gagal: ${err.message}`); 
     }
-}
     
     function showList() {
         loadLocal();
         const container = document.getElementById('listContainer');
         if(localDatabase.length === 0) container.innerHTML = '<p>Belum ada data tersimpan</p>';
-        else container.innerHTML = localDatabase.map((item,i) => `<div style="background:#f3f4f6;padding:10px;margin:8px 0;border-radius:10px;"><b>${escapeHtml(item.name)}</b><br><small>📅 ${item.savedAt} | 👤 ${escapeHtml(item.data.pic)}</small><br><button class="loadItem" data-id="${item.id}" style="background:#2563eb;border:none;padding:4px 12px;border-radius:6px;color:white;margin-top:5px;">📂 Load</button> <button class="delItem" data-id="${item.id}" style="background:red;border:none;padding:4px 12px;border-radius:6px;color:white;">🗑️ Hapus</button></div>`).join('');
+        else container.innerHTML = localDatabase.map((item,i) => `<div style="background:#f3f4f6;padding:10px;margin:8px 0;border-radius:10px;"><b>${escapeHtml(item.name)}</b><br><small>📅 ${item.savedAt} | 👤 ${escapeHtml(item.data.pic)}</small><br><button class="loadItem" data-id="${item.id}" style="background:#2563eb;border:none;padding:4px 12px;border-radius:6px;color:white;margin-top:5px;cursor:pointer;">📂 Load</button> <button class="delItem" data-id="${item.id}" style="background:red;border:none;padding:4px 12px;border-radius:6px;color:white;cursor:pointer;">🗑️ Hapus</button></div>`).join('');
         document.querySelectorAll('.loadItem').forEach(btn => btn.onclick = () => { let f = localDatabase.find(d => d.id === parseInt(btn.dataset.id)); if(f) { loadData(f.data); document.getElementById('listModal').style.display = 'none'; } });
         document.querySelectorAll('.delItem').forEach(btn => btn.onclick = () => { if(confirm('Hapus data ini?')) { localDatabase = localDatabase.filter(d => d.id !== parseInt(btn.dataset.id)); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); showList(); } });
         document.getElementById('listModal').style.display = 'flex';
@@ -408,18 +514,23 @@ async function pushToGithub() {
     
     function exportToExcel() {
         const d = collectData();
-        const wsData = [["A3 REPORT"],["JUDUL", d.title],["TANGGAL", d.date],["PIC", d.pic],["BACKGROUND", d.background],["CURRENT", d.current],["TARGET", d.target],["CHECK", d.check],["FOLLOW UP", d.followup]];
+        const wsData = [["A3 REPORT"],["JUDUL", d.title],["TANGGAL", d.date],["PIC", d.pic],["BACKGROUND", d.background]];
         const ws = XLSX.utils.aoa_to_sheet(wsData);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "A3_Report");
         XLSX.writeFile(wb, `A3_Report_${d.title}.xlsx`);
     }
     
-    function clearAll() { if(confirm('Clear semua form dan data lokal?')) { localStorage.removeItem(LOCAL_DB_KEY); location.reload(); } }
+    function clearAll() { 
+        if(confirm('Clear semua form dan data lokal?')) { 
+            localStorage.removeItem(LOCAL_DB_KEY); 
+            location.reload(); 
+        } 
+    }
     
     // Events
-    document.getElementById('pullBtn').onclick = pullFromGithub;
-    document.getElementById('pushBtn').onclick = () => { loadLocal(); pushToGithub(); };
+    document.getElementById('syncDownBtn').onclick = syncFromSupabase;
+    document.getElementById('syncUpBtn').onclick = () => { loadLocal(); syncToSupabase(); };
     document.getElementById('saveLocalBtn').onclick = saveLocal;
     document.getElementById('printBtn').onclick = () => window.print();
     document.getElementById('exportExcelBtn').onclick = exportToExcel;
@@ -430,8 +541,8 @@ async function pushToGithub() {
     window.onclick = (e) => { if(e.target === document.getElementById('listModal')) document.getElementById('listModal').style.display = 'none'; };
     
     function init() {
-        log('🚀 Aplikasi A3 Report dimulai...');
-        log(`Token terisi: ${GITHUB_TOKEN ? '✅ Token ada (panjang: ' + GITHUB_TOKEN.length + ')' : '❌ Token kosong!'}`);
+        log('🚀 Aplikasi A3 Report dengan Supabase dimulai...');
+        log(`Supabase URL: ${SUPABASE_URL}`);
         initWhy();
         initFishbone();
         initCounter();
@@ -439,10 +550,49 @@ async function pushToGithub() {
         loadLocal();
         renderReport();
         
-        fetch(RAW_URL).then(res => {
-            if(res.ok) { document.getElementById('cloudStatus').innerHTML = '☁️ Terhubung'; log('Cloud terhubung'); }
-            else { document.getElementById('cloudStatus').innerHTML = '⚠️ Siap sync pertama'; log('Cloud kosong, siap push pertama'); }
-        }).catch(() => { document.getElementById('cloudStatus').innerHTML = '⚠️ Cek koneksi'; });
+        // Test koneksi Supabase
+        document.getElementById('dbStatus').innerHTML = '⏳ Testing koneksi...';
+        supabase.from('a3_reports').select('count', { count: 'exact', head: true }).then(({ error }) => {
+            if(error) {
+                if(error.message.includes('relation "a3_reports" does not exist')) {
+                    log('⚠️ Tabel belum dibuat! Silakan buat tabel di Supabase dashboard.');
+                    document.getElementById('dbStatus').innerHTML = '⚠️ Buat tabel dulu!';
+                    document.getElementById('dbStatus').className = 'status-offline';
+                    alert('⚠️ Tabel "a3_reports" belum dibuat!\n\nSilakan buka SQL Editor di Supabase dan jalankan query:\n\n' +
+                        'CREATE TABLE a3_reports (\n' +
+                        '  id SERIAL PRIMARY KEY,\n' +
+                        '  report_id BIGINT NOT NULL,\n' +
+                        '  name TEXT NOT NULL,\n' +
+                        '  saved_at TIMESTAMP DEFAULT NOW(),\n' +
+                        '  title TEXT,\n' +
+                        '  date TEXT,\n' +
+                        '  time TEXT,\n' +
+                        '  area TEXT,\n' +
+                        '  pic_leader TEXT,\n' +
+                        '  members TEXT,\n' +
+                        '  target_date TEXT,\n' +
+                        '  target_pic TEXT,\n' +
+                        '  background TEXT,\n' +
+                        '  current_condition TEXT,\n' +
+                        '  target_condition TEXT,\n' +
+                        '  check_verification TEXT,\n' +
+                        '  follow_up TEXT,\n' +
+                        '  five_why JSONB,\n' +
+                        '  fishbone JSONB,\n' +
+                        '  countermeasures JSONB,\n' +
+                        '  images TEXT[]\n' +
+                        ');');
+                } else {
+                    log(`⚠️ Koneksi error: ${error.message}`);
+                    document.getElementById('dbStatus').innerHTML = '⚠️ Cek koneksi';
+                    document.getElementById('dbStatus').className = 'status-offline';
+                }
+            } else {
+                log('✅ Koneksi Supabase berhasil!');
+                document.getElementById('dbStatus').innerHTML = '☁️ Supabase Siap';
+                document.getElementById('dbStatus').className = 'status-online';
+            }
+        });
     }
     init();
 </script>
