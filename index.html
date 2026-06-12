@@ -311,54 +311,90 @@
         if(name) { localDatabase.unshift({ id: Date.now(), name, savedAt: new Date().toLocaleString(), data }); localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase)); loadLocal(); alert(`✅ Data "${name}" tersimpan di lokal!`); renderReport(); }
     }
     
-    async function pullFromGithub() {
-        log('🔽 Pull dari GitHub...');
-        try {
-            const res = await fetch(RAW_URL);
-            log(`Status: ${res.status}`);
-            if(res.status === 404) { alert('⚠️ Cloud kosong. Push data pertama!'); log('File belum ada di cloud'); return; }
-            if(!res.ok) throw new Error(`HTTP ${res.status}`);
-            const data = await res.json();
-            if(data.database && Array.isArray(data.database)) {
-                localDatabase = data.database;
-                localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
-                loadLocal();
-                document.getElementById('cloudCount').innerText = localDatabase.length;
-                alert(`✅ Pull berhasil! ${localDatabase.length} laporan dari cloud.`);
-                log(`Pull sukses, ${localDatabase.length} laporan`);
-            }
-        } catch(err) { log(`❌ Error: ${err.message}`); alert(`Error: ${err.message}`); }
-    }
-    
-    async function pushToGithub() {
-        log('📤 Push ke GitHub...');
-        if(localDatabase.length === 0) { alert('⚠️ Tidak ada data lokal. Simpan data dulu!'); return; }
-        
-        const dataPush = { lastUpdated: new Date().toISOString(), database: localDatabase, totalRecords: localDatabase.length };
-        const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataPush, null, 2))));
-        
-        try {
-            let sha = null;
-            const checkRes = await fetch(API_URL, { headers: { 'Authorization': `token ${GITHUB_TOKEN}` } });
-            log(`Check file: ${checkRes.status}`);
-            if(checkRes.ok) { const existing = await checkRes.json(); sha = existing.sha; log(`SHA ditemukan, akan update`); }
-            
-            const body = { message: `Update A3 DB ${new Date().toLocaleString()}`, content, branch: "main" };
-            if(sha) body.sha = sha;
-            
-            const res = await fetch(API_URL, {
-                method: 'PUT',
-                headers: { 'Authorization': `token ${GITHUB_TOKEN}`, 'Content-Type': 'application/json' },
-                body: JSON.stringify(body)
-            });
-            log(`Push response: ${res.status}`);
-            if(!res.ok) { const err = await res.text(); throw new Error(`${res.status}: ${err.substring(0,100)}`); }
-            alert(`✅ Push berhasil! ${localDatabase.length} laporan ke cloud.`);
+   async function pullFromGithub() {
+    log('🔽 Pull dari GitHub...');
+    try {
+        const res = await fetch(RAW_URL);
+        log(`Status: ${res.status}`);
+        if(res.status === 404) {
+            alert('⚠️ Cloud kosong. Push data pertama!'); 
+            log('File belum ada di cloud'); 
+            return;
+        }
+        if(!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        if(data.database && Array.isArray(data.database)) {
+            localDatabase = data.database;
+            localStorage.setItem(LOCAL_DB_KEY, JSON.stringify(localDatabase));
+            loadLocal();
             document.getElementById('cloudCount').innerText = localDatabase.length;
-            document.getElementById('cloudStatus').innerHTML = '☁️ Online';
-            log('Push sukses!');
-        } catch(err) { log(`❌ Push gagal: ${err.message}`); alert(`❌ Push gagal: ${err.message}`); }
+            alert(`✅ Pull berhasil! ${localDatabase.length} laporan dari cloud.`);
+            log(`Pull sukses, ${localDatabase.length} laporan`);
+        } else {
+            throw new Error('Format data tidak valid');
+        }
+    } catch(err) {
+        log(`❌ Error: ${err.message}`); 
+        alert(`Error: ${err.message}`);
     }
+}
+
+async function pushToGithub() {
+    log('📤 Push ke GitHub...');
+    if(localDatabase.length === 0) {
+        alert('⚠️ Tidak ada data lokal. Simpan data dulu!'); 
+        return;
+    }
+
+    const dataPush = { 
+        lastUpdated: new Date().toISOString(), 
+        database: localDatabase, 
+        totalRecords: localDatabase.length 
+    };
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(dataPush, null, 2))));
+
+    try {
+        let sha = null;
+        const checkRes = await fetch(API_URL, { 
+            headers: { 'Authorization': `token ${GITHUB_TOKEN}` } 
+        });
+        log(`Check file: ${checkRes.status}`);
+        if(checkRes.ok) {
+            const existing = await checkRes.json(); 
+            sha = existing.sha; 
+            log(`SHA ditemukan, akan update`);
+        }
+
+        const body = { 
+            message: `Update A3 DB ${new Date().toLocaleString()}`, 
+            content: content, 
+            branch: "main" 
+        };
+        if(sha) body.sha = sha;
+
+        const res = await fetch(API_URL, {
+            method: 'PUT',
+            headers: { 
+                'Authorization': `token ${GITHUB_TOKEN}`, 
+                'Content-Type': 'application/json' 
+            },
+            body: JSON.stringify(body)
+        });
+        
+        log(`Push response: ${res.status}`);
+        if(!res.ok) { 
+            const err = await res.text(); 
+            throw new Error(`${res.status}: ${err.substring(0,100)}`); 
+        }
+        alert(`✅ Push berhasil! ${localDatabase.length} laporan ke cloud.`);
+        document.getElementById('cloudCount').innerText = localDatabase.length;
+        document.getElementById('cloudStatus').innerHTML = '☁️ Online';
+        log('Push sukses!');
+    } catch(err) { 
+        log(`❌ Push gagal: ${err.message}`); 
+        alert(`❌ Push gagal: ${err.message}`); 
+    }
+}
     
     function showList() {
         loadLocal();
